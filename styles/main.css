@@ -106,9 +106,10 @@ body {
 .project-switcher {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   background: var(--bg-tertiary);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
+  padding-left: 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }

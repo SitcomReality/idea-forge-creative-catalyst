@@ -71,6 +71,7 @@ export function initializeEventHandlers() {
     document.getElementById('generate-btn').addEventListener('click', () => processConceptInput(inputManager.getValue()));
     document.getElementById('export-btn').addEventListener('click', () => projectManager.exportProject());
     document.getElementById('project-btn').addEventListener('click', () => projectManager.showProjectManager());
+    document.getElementById('new-project-btn').addEventListener('click', () => projectManager.createNewProject('Untitled Project'));
     document.getElementById('add-card').addEventListener('click', () => cardManager.createNewCardFromDialog());
     
     // Category button (placeholder action)
