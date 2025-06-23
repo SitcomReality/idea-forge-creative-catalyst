@@ -17,7 +17,8 @@ export const CARD_CATEGORIES = {
   USER_EXPERIENCE: 'user-experience',
   BRANDING: 'branding',
   PERFORMANCE: 'performance',
-  ACCESSIBILITY: 'accessibility'
+  ACCESSIBILITY: 'accessibility',
+  CONCEPT: 'concept' // Added missing concept category
 };
 
 export const CARD_TYPES = {
@@ -84,4 +85,3 @@ export const STORAGE_KEYS = {
   APP_STATE: 'ideaforge_state',
   USER_PREFERENCES: 'ideaforge_preferences'
 };
-
