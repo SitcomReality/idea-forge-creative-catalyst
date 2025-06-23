@@ -201,6 +201,12 @@ body {
   color: var(--text-primary);
 }
 
+.btn-icon svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-content {
