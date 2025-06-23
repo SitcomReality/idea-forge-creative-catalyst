@@ -3,11 +3,10 @@ import { APP_CONFIG } from '../utils/constants.js';
 
 class ChatManager {
   constructor() {
-    this.conversationHistory = storage.loadChatHistory();
     this.isProcessing = false;
   }
 
-  async sendMessage(message, systemPrompt = null) {
+  async sendMessage(message, history = [], systemPrompt = null) {
     if (this.isProcessing) {
       throw new Error('Already processing a message');
     }
@@ -22,7 +21,7 @@ class ChatManager {
         timestamp: Date.now()
       };
       
-      this.conversationHistory.push(userMessage);
+      history.push(userMessage);
 
       // Prepare messages for AI
       const messages = [];
@@ -35,7 +34,7 @@ class ChatManager {
       }
 
       // Add conversation history (last 10 messages to avoid token limits)
-      const recentHistory = this.conversationHistory
+      const recentHistory = history
         .slice(-10)
         .map(msg => ({
           role: msg.role,
@@ -56,15 +55,12 @@ class ChatManager {
         timestamp: Date.now()
       };
 
-      this.conversationHistory.push(aiMessage);
+      history.push(aiMessage);
 
       // Keep history manageable
-      if (this.conversationHistory.length > APP_CONFIG.maxChatHistory) {
-        this.conversationHistory = this.conversationHistory.slice(-APP_CONFIG.maxChatHistory);
+      if (history.length > APP_CONFIG.maxChatHistory) {
+        history.splice(0, history.length - APP_CONFIG.maxChatHistory);
       }
-
-      // Save to storage
-      storage.saveChatHistory(this.conversationHistory);
 
       return aiMessage;
 
@@ -110,27 +106,6 @@ class ChatManager {
       this.isProcessing = false;
     }
   }
-
-  getHistory() {
-    return [...this.conversationHistory];
-  }
-
-  clearHistory() {
-    this.conversationHistory = [];
-    storage.saveChatHistory([]);
-  }
-
-  addSystemMessage(content) {
-    const systemMessage = {
-      role: "system",
-      content: content,
-      timestamp: Date.now()
-    };
-    
-    this.conversationHistory.push(systemMessage);
-    storage.saveChatHistory(this.conversationHistory);
-  }
 }
 
 export const chatManager = new ChatManager();
-

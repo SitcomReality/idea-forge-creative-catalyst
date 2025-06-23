@@ -176,6 +176,81 @@
   color: var(--text-muted);
 }
 
+/* Project Manager Modal */
+.project-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.project-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.project-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-item:last-child {
+    border-bottom: none;
+}
+
+.project-item:hover {
+    background-color: var(--bg-card);
+}
+
+.project-item.active {
+    background-color: rgba(99, 102, 241, 0.2);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.project-item .project-name {
+    font-weight: 500;
+    flex-grow: 1;
+}
+
+.project-item .project-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.project-item:hover .project-actions {
+    opacity: 1;
+}
+
+.new-project-form {
+    display: flex;
+    gap: 1rem;
+}
+
+.new-project-form input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+}
+
+.new-project-form input:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+}
+
 /* AI Panel */
 .ai-panel {
   position: fixed;
@@ -380,4 +455,3 @@
     font-size: 1.25rem;
   }
 }
-

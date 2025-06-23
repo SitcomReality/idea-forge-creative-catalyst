@@ -33,6 +33,7 @@ class CardComponent {
           <button class="btn-icon card-edit" title="Edit card">✏️</button>
           <button class="btn-icon card-enhance" title="Enhance with AI">✨</button>
           <button class="btn-icon card-duplicate" title="Create similar">📋</button>
+          <button class="btn-icon card-copy" title="Copy to project">✈️</button>
           <button class="btn-icon card-delete" title="Delete card">🗑️</button>
         </div>
       </div>
@@ -82,6 +83,13 @@ class CardComponent {
       this.triggerEvent('duplicate', this.data);
     });
 
+    // Copy button
+    const copyBtn = card.querySelector('.card-copy');
+    copyBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.triggerEvent('copy', this.data);
+    });
+
     // Delete button
     const deleteBtn = card.querySelector('.card-delete');
     deleteBtn?.addEventListener('click', (e) => {
@@ -90,7 +98,8 @@ class CardComponent {
     });
 
     // Card click
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
       this.triggerEvent('select', this.data);
     });
 
@@ -203,4 +212,3 @@ class CardComponent {
 }
 
 export { CardComponent };
-

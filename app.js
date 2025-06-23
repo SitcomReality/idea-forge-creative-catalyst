@@ -10,17 +10,17 @@ import { generateId, downloadJson } from './utils/helpers.js';
 
 class IdeaForgeApp {
   constructor() {
-    this.cards = [];
+    this.projects = new Map();
+    this.activeProjectId = null;
     this.cardComponents = new Map();
-    this.chatHistory = [];
     this.isProcessing = false;
     
     this.initializeElements();
     this.initializeEventListeners();
-    this.loadSavedData();
     this.initializeDragDrop();
     
     // Show welcome message if first time
+    this.loadSavedData();
     this.showWelcomeIfNeeded();
   }
 
@@ -28,6 +28,8 @@ class IdeaForgeApp {
     this.cardsContainer = document.getElementById('cards-container');
     this.generateBtn = document.getElementById('generate-btn');
     this.exportBtn = document.getElementById('export-btn');
+    this.projectBtn = document.getElementById('project-btn');
+    this.currentProjectNameEl = document.getElementById('current-project-name');
     this.addCategoryBtn = document.getElementById('add-category');
     this.addCardBtn = document.getElementById('add-card');
     this.chatMessages = document.getElementById('chat-messages');
@@ -39,7 +41,8 @@ class IdeaForgeApp {
   initializeEventListeners() {
     // Header buttons
     this.generateBtn.addEventListener('click', () => this.generateFromConcept());
-    this.exportBtn.addEventListener('click', () => this.exportData());
+    this.exportBtn.addEventListener('click', () => this.exportProject());
+    this.projectBtn.addEventListener('click', () => this.showProjectManager());
     this.addCategoryBtn.addEventListener('click', () => this.showAddCategoryDialog());
     this.addCardBtn.addEventListener('click', () => this.createNewCard());
 
@@ -63,7 +66,7 @@ class IdeaForgeApp {
     dragDropManager.on('dragEnd', () => this.onDragEnd());
 
     // Auto-save
-    setInterval(() => this.autoSave(), 30000);
+    window.addEventListener('beforeunload', () => this.saveData());
   }
 
   initializeDragDrop() {
@@ -72,16 +75,20 @@ class IdeaForgeApp {
   }
 
   loadSavedData() {
-    // Load cards
-    const savedCards = storage.loadCards();
-    if (savedCards.length > 0) {
-      this.cards = savedCards;
-      this.renderAllCards();
+    const savedProjects = storage.loadProjects();
+    const savedActiveId = storage.loadActiveProjectId();
+
+    if (savedProjects && savedProjects.size > 0) {
+      this.projects = savedProjects;
+      this.activeProjectId = savedActiveId && this.projects.has(savedActiveId) 
+        ? savedActiveId 
+        : this.projects.keys().next().value;
+    } else {
+      // Create a default project for first-time users
+      this.createNewProject('My First Project', false); // Don't save yet
     }
 
-    // Load chat history
-    this.chatHistory = storage.loadChatHistory();
-    this.renderChatHistory();
+    this.loadProject(this.activeProjectId);
   }
 
   showWelcomeIfNeeded() {
@@ -136,12 +143,27 @@ class IdeaForgeApp {
     try {
       const generatedCards = await generationManager.generateCardsFromConcept(concept);
       
+      // Clear existing cards if generating from a new root concept
+      if (this.getActiveProject().cards.length > 0) {
+        const confirm = await modalManager.showConfirmDialog(
+          'Replace existing components?',
+          'This will replace all current design components. Are you sure?',
+          'Replace'
+        );
+        if (confirm) {
+          this.clearAllCards();
+        } else {
+          this.setProcessingState(false);
+          return;
+        }
+      }
+
       // Add cards to our collection
       generatedCards.forEach(cardData => {
         this.addCard(cardData);
       });
 
-      this.saveData();
+      this.saveActiveProject();
       this.showSuccessNotification(`Generated ${generatedCards.length} design components!`);
       
       // Suggest opening AI chat for further refinement
@@ -179,7 +201,7 @@ class IdeaForgeApp {
         };
         
         this.addCard(newCard);
-        this.saveData();
+        this.saveActiveProject();
       }
     } catch (error) {
       console.error('Error creating card:', error);
@@ -194,11 +216,12 @@ class IdeaForgeApp {
     card.on('edit', (data) => this.editCard(data.id));
     card.on('enhance', (data) => this.enhanceCard(data.id));
     card.on('duplicate', (data) => this.duplicateCard(data.id));
+    card.on('copy', (data) => this.copyCardToProject(data.id));
     card.on('delete', (data) => this.deleteCard(data.id));
     card.on('select', (data) => this.selectCard(data.id));
 
     // Add to collections
-    this.cards.push(cardData);
+    this.getActiveProject().cards.push(cardData);
     this.cardComponents.set(cardData.id, card);
 
     // Render the card
@@ -209,7 +232,7 @@ class IdeaForgeApp {
   }
 
   async editCard(cardId) {
-    const card = this.cards.find(c => c.id === cardId);
+    const card = this.getActiveProject().cards.find(c => c.id === cardId);
     if (!card) return;
 
     try {
@@ -224,7 +247,7 @@ class IdeaForgeApp {
           component.update(card);
         }
         
-        this.saveData();
+        this.saveActiveProject();
       }
     } catch (error) {
       console.error('Error editing card:', error);
@@ -233,7 +256,7 @@ class IdeaForgeApp {
   }
 
   async enhanceCard(cardId) {
-    const card = this.cards.find(c => c.id === cardId);
+    const card = this.getActiveProject().cards.find(c => c.id === cardId);
     if (!card) return;
 
     if (this.isProcessing) return;
@@ -251,7 +274,7 @@ class IdeaForgeApp {
         component.update(card);
       }
       
-      this.saveData();
+      this.saveActiveProject();
       this.showSuccessNotification('Card enhanced successfully!');
 
     } catch (error) {
@@ -263,7 +286,7 @@ class IdeaForgeApp {
   }
 
   async duplicateCard(cardId) {
-    const card = this.cards.find(c => c.id === cardId);
+    const card = this.getActiveProject().cards.find(c => c.id === cardId);
     if (!card) return;
 
     if (this.isProcessing) return;
@@ -274,7 +297,7 @@ class IdeaForgeApp {
       
       if (similarCards.length > 0) {
         this.addCard(similarCards[0]);
-        this.saveData();
+        this.saveActiveProject();
         this.showSuccessNotification('Similar card created!');
       }
 
@@ -290,7 +313,7 @@ class IdeaForgeApp {
       };
       
       this.addCard(duplicated);
-      this.saveData();
+      this.saveActiveProject();
     } finally {
       this.setProcessingState(false);
     }
@@ -306,7 +329,8 @@ class IdeaForgeApp {
 
     if (confirmed) {
       // Remove from arrays
-      this.cards = this.cards.filter(card => card.id !== cardId);
+      const project = this.getActiveProject();
+      project.cards = project.cards.filter(card => card.id !== cardId);
       
       // Remove component
       const component = this.cardComponents.get(cardId);
@@ -315,7 +339,7 @@ class IdeaForgeApp {
         this.cardComponents.delete(cardId);
       }
       
-      this.saveData();
+      this.saveActiveProject();
       this.showSuccessNotification('Card deleted.');
     }
   }
@@ -333,17 +357,27 @@ class IdeaForgeApp {
     }
   }
 
+  clearAllCards() {
+    this.getActiveProject().cards = [];
+    this.cardsContainer.innerHTML = '';
+    this.cardComponents.clear();
+  }
+
   renderAllCards() {
     this.cardsContainer.innerHTML = '';
     this.cardComponents.clear();
 
-    this.cards.forEach(cardData => {
+    const project = this.getActiveProject();
+    if (!project) return;
+
+    project.cards.forEach(cardData => {
       const card = CardComponent.fromData(cardData);
       
       // Set up event listeners
       card.on('edit', (data) => this.editCard(data.id));
       card.on('enhance', (data) => this.enhanceCard(data.id));
       card.on('duplicate', (data) => this.duplicateCard(data.id));
+      card.on('copy', (data) => this.copyCardToProject(data.id));
       card.on('delete', (data) => this.deleteCard(data.id));
       card.on('select', (data) => this.selectCard(data.id));
 
@@ -354,7 +388,6 @@ class IdeaForgeApp {
     });
   }
 
-  // Chat functionality
   async sendChatMessage() {
     const message = this.chatInput.value.trim();
     if (!message || this.isProcessing) return;
@@ -366,8 +399,10 @@ class IdeaForgeApp {
     fabManager.setLoading(true);
 
     try {
-      const response = await chatManager.sendMessage(message);
+      const project = this.getActiveProject();
+      const response = await chatManager.sendMessage(message, project.chatHistory);
       this.addChatMessage('assistant', response.content);
+      this.saveActiveProject();
       
     } catch (error) {
       console.error('Chat error:', error);
@@ -389,7 +424,10 @@ class IdeaForgeApp {
 
   renderChatHistory() {
     this.chatMessages.innerHTML = '';
-    this.chatHistory.forEach(message => {
+    const project = this.getActiveProject();
+    if (!project) return;
+
+    project.chatHistory.forEach(message => {
       if (message.role !== 'system') {
         this.addChatMessage(message.role, message.content);
       }
@@ -400,16 +438,17 @@ class IdeaForgeApp {
   onCardReorder(data) {
     if (data.moved) {
       // Reorder cards array to match new positions
+      const project = this.getActiveProject();
       const cardId = data.cardId;
-      const card = this.cards.find(c => c.id === cardId);
+      const card = project.cards.find(c => c.id === cardId);
       
       if (card) {
         // Remove from old position
-        this.cards = this.cards.filter(c => c.id !== cardId);
+        project.cards = project.cards.filter(c => c.id !== cardId);
         // Insert at new position
-        this.cards.splice(data.newIndex, 0, card);
+        project.cards.splice(data.newIndex, 0, card);
         
-        this.saveData();
+        this.saveActiveProject();
       }
     }
   }
@@ -424,31 +463,35 @@ class IdeaForgeApp {
 
   // Data management
   saveData() {
-    storage.saveCards(this.cards);
-    storage.saveChatHistory(this.chatHistory);
+    storage.saveProjects(this.projects);
+    storage.saveActiveProjectId(this.activeProjectId);
   }
 
-  autoSave() {
-    if (this.cards.length > 0) {
-      this.saveData();
+  getActiveProject() {
+    return this.projects.get(this.activeProjectId);
+  }
+
+  saveActiveProject() {
+    const project = this.getActiveProject();
+    if (project) {
+        project.updatedAt = Date.now();
+        project.concept = inputManager.getValue();
+        this.projects.set(this.activeProjectId, project);
+        this.saveData();
     }
   }
 
-  exportData() {
+  exportProject() {
+    const project = this.getActiveProject();
+    if (!project) return;
+
     const exportData = {
       version: '1.0.0',
       timestamp: Date.now(),
-      concept: inputManager.getValue(),
-      cards: this.cards,
-      metadata: {
-        cardCount: this.cards.length,
-        categories: [...new Set(this.cards.map(c => c.category))],
-        createdAt: Math.min(...this.cards.map(c => c.createdAt)),
-        updatedAt: Math.max(...this.cards.map(c => c.updatedAt))
-      }
+      project: project
     };
 
-    const filename = `idea-forge-export-${new Date().toISOString().split('T')[0]}.json`;
+    const filename = `idea-forge-${project.name.replace(/\s+/g, '_')}-${new Date().toISOString().split('T')[0]}.json`;
     downloadJson(exportData, filename);
     
     this.showSuccessNotification('Design exported successfully!');
@@ -505,10 +548,138 @@ class IdeaForgeApp {
   }
 
   async showAddCategoryDialog() {
-    const categories = [...new Set(this.cards.map(card => card.category))];
+    const project = this.getActiveProject();
+    const categories = [...new Set(project.cards.map(card => card.category))];
     // Implementation for adding new category would go here
     // For now, just create a new card
     await this.createNewCard();
+  }
+
+  // Project Management
+  async showProjectManager() {
+    const result = await modalManager.showProjectManager({
+        projects: Array.from(this.projects.values()),
+        activeProjectId: this.activeProjectId
+    });
+
+    if (!result) return;
+
+    switch (result.action) {
+        case 'switch':
+            this.switchProject(result.id);
+            break;
+        case 'create':
+            this.createNewProject(result.name);
+            break;
+        case 'rename':
+            this.renameProject(result.id, result.name);
+            break;
+        case 'delete':
+            this.deleteProject(result.id);
+            break;
+    }
+  }
+
+  loadProject(projectId) {
+    this.activeProjectId = projectId;
+    const project = this.getActiveProject();
+
+    if (!project) {
+      console.error(`Project with id ${projectId} not found.`);
+      // Fallback to first project if active one is missing
+      if (this.projects.size > 0) {
+         this.loadProject(this.projects.keys().next().value);
+      }
+      return;
+    }
+
+    this.currentProjectNameEl.textContent = project.name;
+    inputManager.setValue(project.concept);
+    this.renderAllCards();
+    this.renderChatHistory();
+
+    storage.saveActiveProjectId(this.activeProjectId);
+  }
+
+  switchProject(projectId) {
+    if (projectId === this.activeProjectId) return;
+    this.saveActiveProject(); // Save current project before switching
+    this.loadProject(projectId);
+    this.showSuccessNotification(`Switched to project: ${this.getActiveProject().name}`);
+  }
+
+  createNewProject(name, setActive = true) {
+    const newId = `proj_${Date.now()}`;
+    const newProject = {
+      id: newId,
+      name: name,
+      concept: '',
+      cards: [],
+      chatHistory: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    this.projects.set(newId, newProject);
+    if (setActive) {
+      this.switchProject(newId);
+      this.saveData();
+      this.showSuccessNotification(`Project "${name}" created!`);
+    } else {
+       this.activeProjectId = newId;
+    }
+  }
+
+  renameProject(projectId, newName) {
+    const project = this.projects.get(projectId);
+    if (project) {
+      project.name = newName;
+      project.updatedAt = Date.now();
+      this.projects.set(projectId, project);
+      if (projectId === this.activeProjectId) {
+        this.currentProjectNameEl.textContent = newName;
+      }
+      this.saveData();
+    }
+  }
+
+  deleteProject(projectId) {
+    if (this.projects.size <= 1) {
+      this.showErrorNotification("Cannot delete the only project.");
+      return;
+    }
+    this.projects.delete(projectId);
+    if (this.activeProjectId === projectId) {
+      // Switch to another project
+      this.activeProjectId = this.projects.keys().next().value;
+      this.loadProject(this.activeProjectId);
+    }
+    this.saveData();
+  }
+
+  async copyCardToProject(cardId) {
+    const cardToCopy = this.getActiveProject().cards.find(c => c.id === cardId);
+    if (!cardToCopy) return;
+
+    const targetProjectId = await modalManager.showCopyCardDialog(
+        Array.from(this.projects.values()),
+        this.activeProjectId
+    );
+
+    if (targetProjectId) {
+      const targetProject = this.projects.get(targetProjectId);
+      if (targetProject) {
+        const newCard = {
+          ...cardToCopy,
+          id: generateId(), // give it a new ID
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        targetProject.cards.push(newCard);
+        targetProject.updatedAt = Date.now();
+        this.saveData();
+        this.showSuccessNotification(`Card copied to "${targetProject.name}"`);
+      }
+    }
   }
 }
 
@@ -555,4 +726,3 @@ notificationStyles.textContent = `
   }
 `;
 document.head.appendChild(notificationStyles);
-

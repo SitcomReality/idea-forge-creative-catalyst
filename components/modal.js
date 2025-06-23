@@ -167,6 +167,136 @@ class ModalManager {
     });
   }
 
+  async showCopyCardDialog(projects, currentProjectId) {
+    const otherProjects = projects.filter(p => p.id !== currentProjectId);
+
+    if (otherProjects.length === 0) {
+      this.open('Copy Card', '<p>No other projects available to copy to.</p>');
+      return Promise.resolve(null);
+    }
+    
+    const form = document.createElement('form');
+    form.className = 'copy-card-form';
+    form.innerHTML = `
+      <div class="form-group">
+        <label for="project-select">Select a project to copy this card to:</label>
+        <select id="project-select" name="projectId" required>
+          ${otherProjects.map(p => `<option value="${p.id}">${this.escapeHtml(p.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-copy-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Copy Card</button>
+      </div>
+    `;
+
+    await this.open('Copy Card to Project', form);
+
+    return new Promise((resolve) => {
+        const cancelBtn = form.querySelector('#cancel-copy-btn');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const projectId = formData.get('projectId');
+            this.close();
+            resolve(projectId);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            this.close();
+            resolve(null);
+        });
+    });
+  }
+
+  async showProjectManager({ projects, activeProjectId }) {
+    const container = document.createElement('div');
+    container.className = 'project-manager';
+    container.innerHTML = `
+        <div class="project-list-container">
+            <h4>Your Projects</h4>
+            <ul class="project-list">
+                ${projects.map(p => `
+                    <li class="project-item ${p.id === activeProjectId ? 'active' : ''}" data-id="${p.id}">
+                        <span class="project-name">${this.escapeHtml(p.name)}</span>
+                        <div class="project-actions">
+                            <button class="btn-icon rename-project" title="Rename">✏️</button>
+                            <button class="btn-icon delete-project" title="Delete">🗑️</button>
+                        </div>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+        <div class="new-project-container">
+            <h4>Create New Project</h4>
+            <form class="new-project-form">
+                <input type="text" placeholder="New project name..." class="new-project-input" required />
+                <button type="submit" class="btn btn-primary">Create</button>
+            </form>
+        </div>
+    `;
+
+    await this.open('Project Manager', container, { autoFocus: false });
+
+    return new Promise((resolve) => {
+        const handleClose = (result) => {
+            this.close();
+            resolve(result);
+        };
+
+        // Switch project
+        container.querySelectorAll('.project-item .project-name').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const projectId = e.currentTarget.closest('.project-item').dataset.id;
+                handleClose({ action: 'switch', id: projectId });
+            });
+        });
+
+        // Rename project
+        container.querySelectorAll('.rename-project').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const item = e.currentTarget.closest('.project-item');
+                const projectId = item.dataset.id;
+                const currentName = item.querySelector('.project-name').textContent;
+                const newName = prompt('Enter new project name:', currentName);
+                if (newName && newName.trim() !== '') {
+                    handleClose({ action: 'rename', id: projectId, name: newName.trim() });
+                }
+            });
+        });
+
+        // Delete project
+        container.querySelectorAll('.delete-project').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const projectId = e.currentTarget.closest('.project-item').dataset.id;
+                if (projects.length <= 1) {
+                    alert("You cannot delete the only project.");
+                    return;
+                }
+                const confirmed = await this.showConfirmDialog(
+                    'Delete Project',
+                    'Are you sure? This will delete all cards and data associated with this project.',
+                    'Delete Project'
+                );
+                if (confirmed) {
+                    handleClose({ action: 'delete', id: projectId });
+                }
+            });
+        });
+
+        // Create new project
+        container.querySelector('.new-project-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = container.querySelector('.new-project-input');
+            const name = input.value.trim();
+            if (name) {
+                handleClose({ action: 'create', name });
+            }
+        });
+    });
+  }
+
   async showConfirmDialog(title, message, confirmText = 'Confirm', cancelText = 'Cancel') {
     const dialog = document.createElement('div');
     dialog.className = 'confirm-dialog';
@@ -204,4 +334,3 @@ class ModalManager {
 }
 
 export const modalManager = new ModalManager();
-

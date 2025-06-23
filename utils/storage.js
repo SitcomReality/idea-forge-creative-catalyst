@@ -99,6 +99,27 @@ class StorageManager {
     return this.get(STORAGE_KEYS.CHAT_HISTORY, []);
   }
 
+  saveProjects(projects) {
+    // Convert Map to Object for JSON serialization
+    const projectsObject = Object.fromEntries(projects);
+    return this.set(STORAGE_KEYS.PROJECTS, projectsObject);
+  }
+
+  loadProjects() {
+    const projectsObject = this.get(STORAGE_KEYS.PROJECTS, null);
+    if (!projectsObject) return null;
+    // Convert Object back to Map
+    return new Map(Object.entries(projectsObject));
+  }
+
+  saveActiveProjectId(id) {
+    return this.set(STORAGE_KEYS.ACTIVE_PROJECT_ID, id);
+  }
+
+  loadActiveProjectId() {
+    return this.get(STORAGE_KEYS.ACTIVE_PROJECT_ID);
+  }
+
   saveAppState(state) {
     return this.set(STORAGE_KEYS.APP_STATE, state);
   }
@@ -117,4 +138,3 @@ class StorageManager {
 }
 
 export const storage = new StorageManager();
-

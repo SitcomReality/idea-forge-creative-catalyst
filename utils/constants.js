@@ -76,12 +76,16 @@ Consider:
 - Market relevance
 - Innovation vs. convention
 
-Be direct but constructive, and always provide specific suggestions for improvement.`
+Be direct but constructive, and always provide specific suggestions for improvement.
+ 
+The current project context is:
+Concept: {{concept}}
+Existing Cards: {{cards}}`
 };
 
 export const STORAGE_KEYS = {
-  CARDS: 'ideaforge_cards',
-  CHAT_HISTORY: 'ideaforge_chat',
+  PROJECTS: 'ideaforge_projects',
+  ACTIVE_PROJECT_ID: 'ideaforge_active_project_id',
   APP_STATE: 'ideaforge_state',
   USER_PREFERENCES: 'ideaforge_preferences'
 };
