@@ -13,6 +13,20 @@ async function processConceptInput(concept) {
     uiManager.setProcessingState(true);
     
     try {
+      // Check if project needs a name
+      const project = projectManager.getActiveProject();
+      if(project && project.name === 'My First Project' && project.cards.length === 0) {
+        const schema = { projectName: "string (5 words max)" };
+        const result = await generationManager.chatManager.sendMessageWithJson(
+          `Give a short, creative name for a project based on this concept: "${concept}"`,
+          'You are a creative director. Generate a short, evocative project name. Respond with JSON.',
+          schema
+        );
+        if (result.projectName) {
+          projectManager.updateActiveProjectName(result.projectName);
+        }
+      }
+
       const generatedCards = await generationManager.generateCardsFromConcept(concept);
       if (projectManager.getActiveProject().cards.length > 0) {
         const confirm = await modalManager.showConfirmDialog(

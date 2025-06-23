@@ -75,6 +75,9 @@ class ProjectManager {
     this.projects.set(newId, newProject);
     
     if (setActive) {
+      if(this.activeProjectId) {
+        this.saveActiveProjectData(); // Save previous project before switching
+      }
       this.switchProject(newId);
       this.saveData();
       uiManager.showSuccessNotification(`Project "${name}" created!`);
@@ -93,6 +96,15 @@ class ProjectManager {
         this.currentProjectNameEl.textContent = newName;
       }
       this.saveData();
+    }
+  }
+
+  updateActiveProjectName(newName) {
+    const project = this.getActiveProject();
+    if (project) {
+        project.name = newName;
+        this.currentProjectNameEl.textContent = newName;
+        this.saveActiveProjectData();
     }
   }
 
