@@ -122,12 +122,12 @@ class CardComponent {
     if (this.element) {
       // Update DOM elements
       const title = this.element.querySelector('.card-title');
-      if (title) title.textContent = this.data.title;
+      if (title) title.innerHTML = this.escapeHtml(this.data.title);
 
       const description = this.element.querySelector('.card-description');
       if (description) {
         if (this.data.description) {
-          description.textContent = this.data.description;
+          description.innerHTML = this.escapeHtml(this.data.description);
           description.style.display = 'block';
         } else {
           description.style.display = 'none';
@@ -137,7 +137,7 @@ class CardComponent {
       const content = this.element.querySelector('.card-content');
       if (content) {
         if (this.data.content) {
-          content.textContent = this.data.content;
+          content.innerHTML = this.escapeHtml(this.data.content);
           content.style.display = 'block';
         } else {
           content.style.display = 'none';
