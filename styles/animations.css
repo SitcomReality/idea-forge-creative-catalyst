@@ -1,0 +1,145 @@
+/* Loading Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Card entrance animations */
+.design-card {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.design-card:nth-child(1) { animation-delay: 0ms; }
+.design-card:nth-child(2) { animation-delay: 100ms; }
+.design-card:nth-child(3) { animation-delay: 200ms; }
+.design-card:nth-child(4) { animation-delay: 300ms; }
+.design-card:nth-child(5) { animation-delay: 400ms; }
+.design-card:nth-child(6) { animation-delay: 500ms; }
+
+/* Chat message animations */
+.chat-message {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.chat-message.user {
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* Loading states */
+.loading {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Hover micro-interactions */
+.design-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1) 0%,
+    transparent 50%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.design-card:hover::before {
+  opacity: 1;
+}
+
+/* Button press animations */
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:active {
+  transform: scale(0.98) translateY(-1px);
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Focus states */
+.btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+

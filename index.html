@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea Forge - Creative Catalyst</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script type="importmap">
+    {
+      "imports": {
+        "sortablejs": "https://cdn.skypack.dev/sortablejs",
+        "lottie-web": "https://cdn.skypack.dev/lottie-web"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">⚡</div>
+                    <h1 class="app-title">Idea Forge</h1>
+                    <span class="app-subtitle">Creative Catalyst</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="export-btn">Export</button>
+                    <button class="btn btn-primary" id="generate-btn">✨ Generate</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <textarea 
+                        id="concept-input" 
+                        placeholder="Describe your idea, concept, or design brief... Be as vague or detailed as you like!"
+                        class="concept-textarea"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button class="btn btn-ghost" id="clear-input">Clear</button>
+                        <button class="btn btn-primary" id="process-concept">Process Concept</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cards Container -->
+            <section class="cards-section">
+                <div class="section-header">
+                    <h2>Design Components</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost" id="add-category">+ Category</button>
+                        <button class="btn btn-ghost" id="add-card">+ Card</button>
+                    </div>
+                </div>
+                <div class="cards-container" id="cards-container">
+                    <!-- Cards will be dynamically generated here -->
+                </div>
+            </section>
+
+            <!-- AI Chat Panel -->
+            <aside class="ai-panel" id="ai-panel">
+                <div class="ai-header">
+                    <h3>AI Assistant</h3>
+                    <button class="btn-icon" id="toggle-ai">×</button>
+                </div>
+                <div class="ai-chat" id="ai-chat">
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Ask for suggestions, refinements, or new ideas...">
+                        <button class="btn btn-primary" id="send-chat">Send</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Floating Action Button -->
+        <button class="fab" id="fab" title="Open AI Assistant">
+            <span class="fab-icon">🤖</span>
+        </button>
+
+        <!-- Modal Overlay -->
+        <div class="modal-overlay" id="modal-overlay">
+            <div class="modal" id="modal">
+                <div class="modal-header">
+                    <h3 id="modal-title">Modal Title</h3>
+                    <button class="btn-icon" id="close-modal">×</button>
+                </div>
+                <div class="modal-content" id="modal-content">
+                    <!-- Dynamic modal content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/constants.js"></script>
+    <script src="utils/helpers.js"></script>
+    <script src="utils/storage.js"></script>
+    <script src="ai/chat.js"></script>
+    <script src="ai/generation.js"></script>
+    <script src="components/card.js"></script>
+    <script src="components/modal.js"></script>
+    <script src="components/fab.js"></script>
+    <script src="components/input.js"></script>
+    <script src="components/drag-drop.js"></script>
+    <script src="app.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
