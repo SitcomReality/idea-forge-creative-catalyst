@@ -213,68 +213,63 @@ class ModalManager {
   async showProjectManager({ projects, activeProjectId }) {
     console.log('[ProjectManagerModal] showProjectManager called with:', { projects, activeProjectId });
 
-    const container = document.createElement('div');
-    container.className = 'project-manager';
-    container.innerHTML = `
-        <div class="project-list-container">
-            <h4>Your Projects</h4>
-            <ul class="project-list">
-                ${projects.map(p => `
-                    <li class="project-item ${p.id === activeProjectId ? 'active' : ''}" data-id="${p.id}">
-                        <span class="project-name">${this.escapeHtml(p.name)}</span>
-                        <div class="project-actions">
-                            <button type="button" class="btn-icon rename-project" title="Rename">✏️</button>
-                            <button type="button" class="btn-icon delete-project" title="Delete">🗑️</button>
-                        </div>
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-        <div class="new-project-container">
-            <h4>Create New Project</h4>
-            <form class="new-project-form" autocomplete="off">
-                <input type="text" placeholder="New project name..." class="new-project-input" required />
-                <button type="submit" class="btn btn-primary new-project-submit">Create</button>
-            </form>
-        </div>
-    `;
-
-    // Put all event setup inside the open promise so the modal is present in the DOM
-    return new Promise(async (resolve) => {
-        console.log('[ProjectManagerModal] Promise created. Opening modal...');
-        await this.open('Project Manager', container, { autoFocus: false });
-        console.log('[ProjectManagerModal] Modal opened. Attaching event listeners...');
-
+    return new Promise((resolve) => {
+        const container = document.createElement('div');
+        container.className = 'project-manager';
+        container.innerHTML = `
+            <div class="project-list-container">
+                <h4>Your Projects</h4>
+                <ul class="project-list">
+                    ${projects.map(p => `
+                        <li class="project-item ${p.id === activeProjectId ? 'active' : ''}" data-id="${p.id}">
+                            <span class="project-name">${this.escapeHtml(p.name)}</span>
+                            <div class="project-actions">
+                                <button type="button" class="btn-icon rename-project" title="Rename">✏️</button>
+                                <button type="button" class="btn-icon delete-project" title="Delete">🗑️</button>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+            <div class="new-project-container">
+                <h4>Create New Project</h4>
+                <form class="new-project-form" autocomplete="off">
+                    <input type="text" placeholder="New project name..." class="new-project-input" required />
+                    <button type="submit" class="btn btn-primary new-project-submit">Create</button>
+                </form>
+            </div>
+        `;
 
         const handleResult = (result) => {
             console.log('[ProjectManagerModal] handleResult called with:', result);
-            this.close();
-            resolve(result);
-        };
-        
-        // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
-        this.currentResolve = () => {
-             console.log('[ProjectManagerModal] Modal closed via external means (ESC, overlay click).');
-             resolve(null);
+            this.close(result); // Close the modal and implicitly resolve the open() promise
         };
 
-        // Switch project: click on project-name
-        const projectItems = container.querySelectorAll('.project-item .project-name');
-        console.log(`[ProjectManagerModal] Found ${projectItems.length} project name items to attach listeners to.`);
-        projectItems.forEach(item => {
+        // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
+        // The `open` method returns a promise that resolves when the modal is closed.
+        // We link our `showProjectManager` promise's resolution to the open/close cycle.
+        this.open('Project Manager', container, { autoFocus: false }).then(result => {
+             console.log('[ProjectManagerModal] Modal closed via external means (ESC, overlay click, etc). Resolving with:', result);
+             resolve(result || null); // Ensure we resolve, even if result is undefined.
+        });
+
+        console.log('[ProjectManagerModal] Modal opened. Attaching event listeners...');
+
+        // Switch project: click on project-item or project-name
+        container.querySelectorAll('.project-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                // Don't trigger if an action button was clicked
+                if (e.target.closest('.project-actions')) return;
+                
                 e.preventDefault();
-                e.stopPropagation();
-                const projectId = e.currentTarget.closest('.project-item').dataset.id;
+                const projectId = e.currentTarget.dataset.id;
                 console.log('[ProjectManagerModal] CLICK: Switch project to', projectId);
                 handleResult({ action: 'switch', id: projectId });
             });
         });
 
         // Rename project: click on pencil icon
-        const renameBtns = container.querySelectorAll('.rename-project');
-        console.log(`[ProjectManagerModal] Found ${renameBtns.length} rename buttons to attach listeners to.`);
-        renameBtns.forEach(btn => {
+        container.querySelectorAll('.rename-project').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation(); // prevent project switch
@@ -294,9 +289,7 @@ class ModalManager {
         });
 
         // Delete project
-        const deleteBtns = container.querySelectorAll('.delete-project');
-        console.log(`[ProjectManagerModal] Found ${deleteBtns.length} delete buttons to attach listeners to.`);
-        deleteBtns.forEach(btn => {
+        container.querySelectorAll('.delete-project').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation(); // prevent project switch
@@ -307,12 +300,15 @@ class ModalManager {
                 console.log('[ProjectManagerModal] CLICK: Delete project', { projectId });
 
                 if (projects.length <= 1) {
-                    alert("You cannot delete the only project.");
+                    this.showErrorNotification("You cannot delete the only project.");
                     return;
                 }
-
-                const confirmed = confirm(
-                    `Delete "${project.name}"?\n\nAre you sure? This will delete all cards and data associated with this project. This action cannot be undone.`
+                
+                // Using the app's built-in confirm dialog for consistency
+                const confirmed = await this.showConfirmDialog(
+                    'Delete Project',
+                    `Delete "${project.name}"?\nThis will delete all data associated with this project. This action cannot be undone.`,
+                    'Delete Project'
                 );
 
                 if (confirmed) {
@@ -323,11 +319,10 @@ class ModalManager {
             });
         });
 
-        // Create new project (prefer submit event on form, disables reload)
+        // Create new project (prefer submit event on form)
         const form = container.querySelector('.new-project-form');
         const input = form.querySelector('.new-project-input');
-        console.log('[ProjectManagerModal] Found new project form:', form);
-        form.addEventListener('submit', function(evt) {
+        form.addEventListener('submit', (evt) => {
             evt.preventDefault();
             evt.stopPropagation();
             const name = input.value.trim();
@@ -335,11 +330,6 @@ class ModalManager {
             if (name) {
                 handleResult({ action: 'create', name });
             }
-        });
-
-        // Add some key logging for debugging
-        container.addEventListener('click', e => {
-            console.log('[ProjectManagerModal] DEBUG: Container clicked. Target:', e.target);
         });
     });
   }
@@ -377,6 +367,10 @@ class ModalManager {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  showErrorNotification(message) {
+    this.open('Error', `<p>${this.escapeHtml(message)}</p>`);
   }
 }
 
