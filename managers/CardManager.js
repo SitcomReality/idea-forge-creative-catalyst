@@ -5,6 +5,7 @@ import { projectManager } from './ProjectManager.js';
 import { uiManager } from './UIManager.js';
 import { generateId } from '../utils/helpers.js';
 import { filterManager } from './FilterManager.js';
+import { contextDock } from '../components/context-dock.js';
 
 class CardManager {
   constructor() {
@@ -179,6 +180,8 @@ class CardManager {
         componentToSelect.element?.classList.add('selected');
     }
     
+    contextDock.update(this.getSelectedCardsData());
+
     // Update filters with new selection state
     filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
     filterManager.applyFilters();
@@ -207,6 +210,7 @@ class CardManager {
         component?.element?.classList.remove('selected');
     });
     this.selectedCardIds.clear();
+    contextDock.update([]);
     uiManager.updateSelectionState(0);
     filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
     filterManager.applyFilters();
@@ -234,6 +238,7 @@ class CardManager {
     this.cardComponents.clear();
     this.clearSelection();
     filterManager.buildFilterControls([], this.selectedCardIds);
+    contextDock.update([]);
   }
 
   renderAllCards() {

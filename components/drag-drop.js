@@ -18,6 +18,7 @@ class DragDropManager {
       ghostClass: 'card-ghost',
       chosenClass: 'card-chosen',
       dragClass: 'card-drag',
+      group: 'cards', // Make cards draggable between Sortable instances
       
       onStart: (evt) => {
         this.isDragging = true;
@@ -193,4 +194,3 @@ class DragDropManager {
 }
 
 export const dragDropManager = new DragDropManager();
-
