@@ -7,9 +7,12 @@ class UIManager {
     constructor() {
         this.isProcessing = false;
         this.generateBtn = document.getElementById('generate-btn');
+        this.processBtn = document.getElementById('process-concept');
         this.notificationContainer = null;
         this.cardsContainer = document.getElementById('cards-container');
         this.isCompactView = false;
+        this.selectionInfo = document.getElementById('selection-info');
+        this.selectionCount = document.getElementById('selection-count');
     }
 
     initialize() {
@@ -50,9 +53,20 @@ class UIManager {
     setProcessingState(processing) {
         this.isProcessing = processing;
         inputManager.setLoading(processing);
-        this.generateBtn.disabled = processing;
-        this.generateBtn.innerHTML = processing ? '⏳ Generating...' : '✨ Generate';
+        this.processBtn.disabled = processing;
+        this.processBtn.innerHTML = processing ? '⏳ Processing...' : 'Process Concept';
         fabManager.setLoading(processing);
+    }
+
+    updateSelectionState(count) {
+        if (count > 0) {
+            this.selectionInfo.style.display = 'flex';
+            this.selectionCount.textContent = count;
+            this.processBtn.textContent = '✨ Generate from Selection';
+        } else {
+            this.selectionInfo.style.display = 'none';
+            this.processBtn.textContent = 'Process Concept';
+        }
     }
 
     toggleCompactView() {

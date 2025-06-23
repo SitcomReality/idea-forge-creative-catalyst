@@ -10,6 +10,7 @@ class CardManager {
   constructor() {
     this.cardComponents = new Map();
     this.cardsContainer = document.getElementById('cards-container');
+    this.selectedCardIds = new Set();
   }
 
   initialize() {
@@ -166,40 +167,73 @@ class CardManager {
     }
   }
 
-  selectCard(cardId) {
+  toggleCardSelection(cardId) {
     const componentToSelect = this.cardComponents.get(cardId);
     if (!componentToSelect) return;
 
-    if (uiManager.isCompactView) {
-        const isAlreadyExpanded = componentToSelect.element.classList.contains('expanded');
-        
-        // Collapse all cards first
-        this.cardComponents.forEach(component => {
-            component.element?.classList.remove('expanded');
-        });
-
-        // If it wasn't already expanded, expand it.
-        // Clicking an expanded card will now just collapse it.
-        if (!isAlreadyExpanded) {
-            componentToSelect.element.classList.add('expanded');
-        }
+    if (this.selectedCardIds.has(cardId)) {
+        this.selectedCardIds.delete(cardId);
+        componentToSelect.element?.classList.remove('selected');
+    } else {
+        this.selectedCardIds.add(cardId);
+        componentToSelect.element?.classList.add('selected');
     }
 
-    // Handle selection highlight
-    this.cardComponents.forEach(component => component.element?.classList.remove('selected'));
-    componentToSelect.element?.classList.add('selected');
+    // Handle compact view expansion
+    if (uiManager.isCompactView) {
+        const isCurrentlyExpanded = componentToSelect.element.classList.contains('expanded');
+        
+        // First, collapse any other expanded card
+        this.cardComponents.forEach(component => {
+            if (component.data.id !== cardId) {
+                component.element?.classList.remove('expanded');
+            }
+        });
+
+        // Then, toggle the clicked card's expansion
+        componentToSelect.element.classList.toggle('expanded', !isCurrentlyExpanded);
+    }
+    
+    uiManager.updateSelectionState(this.selectedCardIds.size);
+  }
+
+  clearSelection() {
+    this.selectedCardIds.forEach(id => {
+        const component = this.cardComponents.get(id);
+        component?.element?.classList.remove('selected');
+    });
+    this.selectedCardIds.clear();
+    uiManager.updateSelectionState(0);
+  }
+
+  getSelectedCardsData() {
+    const projectCards = this.getAllCardsData();
+    return projectCards.filter(card => this.selectedCardIds.has(card.id));
+  }
+
+  hasSelection() {
+    return this.selectedCardIds.size > 0;
+  }
+
+  selectCard(cardId) {
+    // This method is now primarily for single-selection-like actions (e.g., highlighting),
+    // while toggleCardSelection handles the main user interaction.
+    // For now, we'll just proxy to the toggle function.
+    this.toggleCardSelection(cardId);
   }
 
   clearAllCards() {
     projectManager.getActiveProject().cards = [];
     this.cardsContainer.innerHTML = '';
     this.cardComponents.clear();
+    this.clearSelection();
     filterManager.buildFilterControls([]);
   }
 
   renderAllCards() {
     this.cardsContainer.innerHTML = '';
     this.cardComponents.clear();
+    this.clearSelection();
     const project = projectManager.getActiveProject();
     if (!project) return;
     project.cards.forEach(cardData => {
@@ -218,7 +252,7 @@ class CardManager {
     card.on('duplicate', (data) => this.duplicateCard(data.id));
     card.on('copy', (data) => this.copyCardToProject(data.id));
     card.on('delete', (data) => this.deleteCard(data.id));
-    card.on('select', (data) => this.selectCard(data.id));
+    card.on('select', (data) => this.toggleCardSelection(data.id));
   }
 }
 

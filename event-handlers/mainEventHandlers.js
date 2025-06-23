@@ -10,6 +10,12 @@ import { fabManager } from '../components/fab.js';
 
 async function processConceptInput(concept) {
     if (uiManager.isProcessing) return;
+
+    if (cardManager.hasSelection()) {
+        await generateFromSelection(concept);
+        return;
+    }
+    
     uiManager.setProcessingState(true);
     
     try {
@@ -54,6 +60,27 @@ async function processConceptInput(concept) {
     }
 }
 
+async function generateFromSelection(concept) {
+    if (uiManager.isProcessing) return;
+    uiManager.setProcessingState(true);
+
+    try {
+        const contextCards = cardManager.getSelectedCardsData();
+        const generatedCards = await generationManager.generateFromContext(contextCards, concept);
+        
+        generatedCards.forEach(cardData => cardManager.addCard(cardData));
+        projectManager.saveActiveProjectData();
+        cardManager.clearSelection();
+        uiManager.showSuccessNotification(`Generated ${generatedCards.length} new components!`);
+
+    } catch (error) {
+        console.error('Error generating from selection:', error);
+        uiManager.showErrorNotification('Failed to generate from selection.');
+    } finally {
+        uiManager.setProcessingState(false);
+    }
+}
+
 function onCardReorder(data) {
     if (!data.moved) return;
     const project = projectManager.getActiveProject();
@@ -73,6 +100,7 @@ export function initializeEventHandlers() {
     document.getElementById('project-btn').addEventListener('click', () => projectManager.showProjectManager());
     document.getElementById('new-project-btn').addEventListener('click', () => projectManager.createNewProject('Untitled Project'));
     document.getElementById('add-card').addEventListener('click', () => cardManager.createNewCardFromDialog());
+    document.getElementById('clear-selection-btn').addEventListener('click', () => cardManager.clearSelection());
     
     // View toggler
     document.getElementById('toggle-view-btn').addEventListener('click', () => uiManager.toggleCompactView());

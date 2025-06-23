@@ -50,6 +50,55 @@ class GenerationManager {
     }
   }
 
+  async generateFromContext(contextCards, concept, count = 5) {
+    const schema = {
+      cards: [
+        {
+          title: "string",
+          category: "string",
+          description: "string", 
+          content: "string",
+          tags: ["string"],
+          type: "string"
+        }
+      ]
+    };
+
+    const systemPrompt = `You are a creative design assistant. Based on the provided context of existing design components, generate ${count} *new* and *complementary* design cards.
+
+- The user has selected these cards as a foundation: ${JSON.stringify(contextCards)}.
+- The original project concept is: "${concept}".
+- DO NOT regenerate or simply modify the provided components.
+- Create new cards that expand on the existing ideas, fill in design gaps, or offer alternative approaches that are thematically consistent with the provided context.
+- The new cards should feel like they belong to the same project as the context cards.`;
+
+    try {
+        const result = await chatManager.sendMessageWithJson(
+            `Generate ${count} new cards based on the provided context.`,
+            systemPrompt,
+            schema
+        );
+
+        const cards = result.cards.map(card => ({
+            id: generateId(),
+            title: card.title || 'Untitled Card',
+            category: this.validateCategory(card.category),
+            description: card.description || '',
+            content: card.content || '',
+            tags: Array.isArray(card.tags) ? card.tags : [],
+            type: this.validateType(card.type),
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+        }));
+
+        return cards;
+
+    } catch (error) {
+        console.error('Error generating from context:', error);
+        throw new Error('Failed to generate new cards. Please try again.');
+    }
+  }
+
   async enhanceCard(card) {
     const schema = {
       title: "string",
@@ -193,4 +242,3 @@ class GenerationManager {
 }
 
 export const generationManager = new GenerationManager();
-
