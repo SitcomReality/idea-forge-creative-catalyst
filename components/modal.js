@@ -237,19 +237,22 @@ class ModalManager {
         </div>
     `;
 
-    await this.open('Project Manager', container, { autoFocus: false });
+    return new Promise(async (resolve) => {
+        await this.open('Project Manager', container, { autoFocus: false });
 
-    return new Promise((resolve) => {
-        const handleClose = (result) => {
+        const handleResult = (result) => {
             this.close();
             resolve(result);
         };
+        
+        // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
+        this.currentResolve = () => resolve(null);
 
         // Switch project
         container.querySelectorAll('.project-item .project-name').forEach(item => {
             item.addEventListener('click', (e) => {
                 const projectId = e.currentTarget.closest('.project-item').dataset.id;
-                handleClose({ action: 'switch', id: projectId });
+                handleResult({ action: 'switch', id: projectId });
             });
         });
 
@@ -261,8 +264,8 @@ class ModalManager {
                 const projectId = item.dataset.id;
                 const currentName = item.querySelector('.project-name').textContent;
                 const newName = prompt('Enter new project name:', currentName);
-                if (newName && newName.trim() !== '') {
-                    handleClose({ action: 'rename', id: projectId, name: newName.trim() });
+                if (newName && newName.trim() !== '' && newName.trim() !== currentName) {
+                    handleResult({ action: 'rename', id: projectId, name: newName.trim() });
                 }
             });
         });
@@ -271,18 +274,22 @@ class ModalManager {
         container.querySelectorAll('.delete-project').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation(); // prevent project switch
-                const projectId = e.currentTarget.closest('.project-item').dataset.id;
+                const item = e.currentTarget.closest('.project-item');
+                const projectId = item.dataset.id;
+                const project = projects.find(p => p.id === projectId);
+
                 if (projects.length <= 1) {
                     alert("You cannot delete the only project.");
                     return;
                 }
+
                 const confirmed = await this.showConfirmDialog(
-                    'Delete Project',
-                    'Are you sure? This will delete all cards and data associated with this project.',
+                    `Delete "${project.name}"?`,
+                    'Are you sure? This will delete all cards and data associated with this project. This action cannot be undone.',
                     'Delete Project'
                 );
                 if (confirmed) {
-                    handleClose({ action: 'delete', id: projectId });
+                    handleResult({ action: 'delete', id: projectId });
                 }
             });
         });
@@ -292,7 +299,7 @@ class ModalManager {
             const input = container.querySelector('.new-project-input');
             const name = input.value.trim();
             if (name) {
-                handleClose({ action: 'create', name });
+                handleResult({ action: 'create', name });
             }
         };
 
