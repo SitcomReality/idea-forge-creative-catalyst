@@ -551,3 +551,51 @@
     font-size: 1.25rem;
   }
 }
+
+/* --- Begin Fix: Toggle View Button Visibility --- */
+#toggle-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    transition: color 0.2s;
+}
+#toggle-view-btn svg {
+    display: block;
+    width: 1.8rem; /* increase slightly for visibility */
+    height: 1.8rem;
+    fill: var(--text-secondary);
+    color: var(--text-secondary);
+    vertical-align: middle;
+    transition: fill 0.2s, color 0.2s;
+    /* Remove background from svg itself */
+    background: none;
+    pointer-events: none; /* so the btn hover works properly, not svg */
+}
+#toggle-view-btn:hover,
+#toggle-view-btn:focus-visible {
+    color: var(--accent-primary);
+}
+#toggle-view-btn:hover svg,
+#toggle-view-btn:focus-visible svg {
+    fill: var(--accent-primary);
+    color: var(--accent-primary);
+}
+/* Optional: a subtle background effect for hover/focus */
+#toggle-view-btn.btn-icon:hover,
+#toggle-view-btn.btn-icon:focus-visible {
+    background: var(--bg-card-hover);
+}
+
+#toggle-view-btn.btn-icon {
+    /* Remove forced background from parent on default */
+    background: transparent;
+    /* Remove border if inherited */
+    border: none;
+}
+/* --- End Fix: Toggle View Button Visibility --- */
