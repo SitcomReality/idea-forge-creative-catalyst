@@ -230,10 +230,10 @@ class ModalManager {
         </div>
         <div class="new-project-container">
             <h4>Create New Project</h4>
-            <form class="new-project-form">
+            <div class="new-project-form">
                 <input type="text" placeholder="New project name..." class="new-project-input" required />
-                <button type="submit" class="btn btn-primary">Create</button>
-            </form>
+                <button type="button" class="btn btn-primary new-project-submit">Create</button>
+            </div>
         </div>
     `;
 
@@ -256,6 +256,7 @@ class ModalManager {
         // Rename project
         container.querySelectorAll('.rename-project').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // prevent project switch
                 const item = e.currentTarget.closest('.project-item');
                 const projectId = item.dataset.id;
                 const currentName = item.querySelector('.project-name').textContent;
@@ -269,6 +270,7 @@ class ModalManager {
         // Delete project
         container.querySelectorAll('.delete-project').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // prevent project switch
                 const projectId = e.currentTarget.closest('.project-item').dataset.id;
                 if (projects.length <= 1) {
                     alert("You cannot delete the only project.");
@@ -286,12 +288,19 @@ class ModalManager {
         });
 
         // Create new project
-        container.querySelector('.new-project-form').addEventListener('submit', (e) => {
-            e.preventDefault();
+        const createProject = () => {
             const input = container.querySelector('.new-project-input');
             const name = input.value.trim();
             if (name) {
                 handleClose({ action: 'create', name });
+            }
+        };
+
+        container.querySelector('.new-project-submit').addEventListener('click', createProject);
+        container.querySelector('.new-project-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createProject();
             }
         });
     });
