@@ -30,6 +30,7 @@
                     <div class="project-switcher">
                         <span id="current-project-name">No Project</span>
                         <button class="btn btn-secondary" id="project-btn">Projects</button>
+                        <button class="btn btn-icon" id="new-project-btn" title="New Project">+</button>
                     </div>
                     <button class="btn btn-secondary" id="export-btn">Export Project</button>
                     <button class="btn btn-primary" id="generate-btn">✨ Generate</button>
@@ -48,6 +49,10 @@
                         class="concept-textarea"
                     ></textarea>
                     <div class="input-actions">
+                        <div class="selection-info" id="selection-info" style="display: none;">
+                            <span id="selection-count">0</span> cards selected
+                            <button class="btn btn-ghost btn-small" id="clear-selection-btn">Clear</button>
+                        </div>
                         <button class="btn btn-ghost" id="clear-input">Clear</button>
                         <button class="btn btn-primary" id="process-concept">Process Concept</button>
                     </div>
@@ -59,9 +64,15 @@
                 <div class="section-header">
                     <h2>Design Components</h2>
                     <div class="section-actions">
-                        <button class="btn btn-ghost" id="add-category">+ Category</button>
+                        <button class="btn btn-icon" id="toggle-view-btn" title="Toggle Compact View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grid-3x3-gap-fill" viewBox="0 0 16 16">
+                                <path d="M1 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zM1 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"/>
+                        </button>
                         <button class="btn btn-ghost" id="add-card">+ Card</button>
                     </div>
+                </div>
+                <div class="filter-controls" id="filter-controls">
+                    <!-- Filters will be dynamically generated here -->
                 </div>
                 <div class="cards-container" id="cards-container">
                     <!-- Cards will be dynamically generated here -->
@@ -83,6 +94,21 @@
                 </div>
             </aside>
         </main>
+
+        <!-- Context Dock -->
+        <div class="context-dock" id="context-dock">
+            <div class="dock-header" id="dock-header">
+                <h4>Selected Context (<span id="dock-count">0</span>)</h4>
+                <button class="btn-icon" id="toggle-dock-btn" title="Toggle Context Dock">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="dock-content" id="dock-content">
+                <div class="dock-placeholder" id="dock-placeholder">Click on cards or drag them here to add them to your context.</div>
+            </div>
+        </div>
 
         <!-- Floating Action Button -->
         <button class="fab" id="fab" title="Open AI Assistant">
