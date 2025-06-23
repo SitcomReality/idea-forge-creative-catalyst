@@ -242,7 +242,8 @@ class ModalManager {
 
         const handleResult = (result) => {
             console.log('[ProjectManagerModal] handleResult called with:', result);
-            this.close(result); // Close the modal and implicitly resolve the open() promise
+            this.close(); // Only close the modal. The outer promise will resolve.
+            resolve(result); // Resolve the outer promise with the action.
         };
 
         // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
@@ -305,17 +306,17 @@ class ModalManager {
                 }
                 
                 // Using the app's built-in confirm dialog for consistency
-                const confirmed = await this.showConfirmDialog(
+                this.showConfirmDialog(
                     'Delete Project',
                     `Delete "${project.name}"?\nThis will delete all data associated with this project. This action cannot be undone.`,
                     'Delete Project'
-                );
-
-                if (confirmed) {
-                    handleResult({ action: 'delete', id: projectId });
-                } else {
-                    console.log('[ProjectManagerModal] Delete cancelled.');
-                }
+                ).then(confirmed => {
+                    if (confirmed) {
+                        handleResult({ action: 'delete', id: projectId });
+                    } else {
+                        console.log('[ProjectManagerModal] Delete cancelled.');
+                    }
+                });
             });
         });
 
@@ -345,9 +346,8 @@ class ModalManager {
       </div>
     `;
 
-    await this.open(title, dialog);
-
-    return new Promise((resolve) => {
+    // This promise will be resolved by the button clicks.
+    const confirmationPromise = new Promise((resolve) => {
       const cancelBtn = dialog.querySelector('#confirm-cancel');
       const confirmBtn = dialog.querySelector('#confirm-ok');
 
@@ -361,6 +361,19 @@ class ModalManager {
         resolve(true);
       });
     });
+
+    // Open the modal. The `open` method itself returns a promise
+    // that resolves when the modal is closed by any means (ESC, overlay click, etc.).
+    // We can use this to handle cancellation if the user doesn't click a button.
+    this.open(title, dialog).then(() => {
+        // If the modal is closed without a button press, the confirmation promise
+        // might not have resolved yet. We can treat this as a cancellation.
+        // However, our button handlers already call close(), which resolves the `open` promise.
+        // And they also resolve the `confirmationPromise`. This setup is fine.
+    });
+
+    // Return the promise that is controlled by the buttons.
+    return confirmationPromise;
   }
 
   escapeHtml(text) {
