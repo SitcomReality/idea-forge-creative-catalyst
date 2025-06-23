@@ -211,6 +211,8 @@ class ModalManager {
   }
 
   async showProjectManager({ projects, activeProjectId }) {
+    console.log('[ProjectManagerModal] showProjectManager called with:', { projects, activeProjectId });
+
     const container = document.createElement('div');
     container.className = 'project-manager';
     container.innerHTML = `
@@ -239,75 +241,62 @@ class ModalManager {
 
     // Put all event setup inside the open promise so the modal is present in the DOM
     return new Promise(async (resolve) => {
+        console.log('[ProjectManagerModal] Promise created. Opening modal...');
         await this.open('Project Manager', container, { autoFocus: false });
+        console.log('[ProjectManagerModal] Modal opened. Attaching event listeners...');
+
 
         const handleResult = (result) => {
+            console.log('[ProjectManagerModal] handleResult called with:', result);
             this.close();
             resolve(result);
         };
         
         // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
-        this.currentResolve = () => resolve(null);
-
-        // --- Logging for debug ---
-        const log = (...args) => { /*console.log("[ProjectModal]", ...args);*/ };
+        this.currentResolve = () => {
+             console.log('[ProjectManagerModal] Modal closed via external means (ESC, overlay click).');
+             resolve(null);
+        };
 
         // Switch project: click on project-name
-        container.querySelectorAll('.project-item .project-name').forEach(item => {
+        const projectItems = container.querySelectorAll('.project-item .project-name');
+        console.log(`[ProjectManagerModal] Found ${projectItems.length} project name items to attach listeners to.`);
+        projectItems.forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const projectId = e.currentTarget.closest('.project-item').dataset.id;
-                log('switch click', projectId);
+                console.log('[ProjectManagerModal] CLICK: Switch project to', projectId);
                 handleResult({ action: 'switch', id: projectId });
             });
         });
 
         // Rename project: click on pencil icon
-        container.querySelectorAll('.rename-project').forEach(btn => {
+        const renameBtns = container.querySelectorAll('.rename-project');
+        console.log(`[ProjectManagerModal] Found ${renameBtns.length} rename buttons to attach listeners to.`);
+        renameBtns.forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation(); // prevent project switch
                 const item = e.currentTarget.closest('.project-item');
                 const projectId = item.dataset.id;
                 const currentName = item.querySelector('.project-name').textContent;
-                log('rename click', projectId, currentName);
+                console.log('[ProjectManagerModal] CLICK: Rename project', { projectId, currentName });
 
-                // Use a modal prompt for a consistent UI flow (vs browser prompt)
-                const namePromptDiv = document.createElement('div');
-                namePromptDiv.innerHTML = `
-                  <div style="display:flex;flex-direction:column;gap:1rem">
-                    <label for="rename-project-input">Project Name</label>
-                    <input id="rename-project-input" type="text" style="width:100%;padding:0.5rem" value="${this.escapeHtml(currentName)}"/>
-                  </div>
-                `;
-                await this.open('Rename Project', namePromptDiv, { autoFocus: true });
-                const input = namePromptDiv.querySelector('#rename-project-input');
-                input.focus();
-                input.select();
-
-                // Await result (handler closes automatically)
-                input.addEventListener('keydown', (ev) => {
-                    if (ev.key === 'Enter') {
-                        ev.preventDefault();
-                        const newName = input.value.trim();
-                        if (newName && newName !== currentName) {
-                            this.close();
-                            resolve({ action: 'rename', id: projectId, name: newName });
-                        } else {
-                            this.close();
-                            resolve(null);
-                        }
-                    }
-                });
-
-                // If the modal is closed by clicking out/escape, close without renaming
-                this.currentResolve = () => resolve(null);
+                const newName = prompt(`Rename project "${currentName}":`, currentName);
+                
+                if (newName && newName.trim() && newName.trim() !== currentName) {
+                    handleResult({ action: 'rename', id: projectId, name: newName.trim() });
+                } else {
+                    console.log('[ProjectManagerModal] Rename cancelled.');
+                }
             });
         });
 
         // Delete project
-        container.querySelectorAll('.delete-project').forEach(btn => {
+        const deleteBtns = container.querySelectorAll('.delete-project');
+        console.log(`[ProjectManagerModal] Found ${deleteBtns.length} delete buttons to attach listeners to.`);
+        deleteBtns.forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation(); // prevent project switch
@@ -315,20 +304,21 @@ class ModalManager {
                 const projectId = item.dataset.id;
                 const project = projects.find(p => p.id === projectId);
 
-                log('delete click', projectId);
+                console.log('[ProjectManagerModal] CLICK: Delete project', { projectId });
 
                 if (projects.length <= 1) {
                     alert("You cannot delete the only project.");
                     return;
                 }
 
-                const confirmed = await this.showConfirmDialog(
-                    `Delete "${project.name}"?`,
-                    'Are you sure? This will delete all cards and data associated with this project. This action cannot be undone.',
-                    'Delete Project'
+                const confirmed = confirm(
+                    `Delete "${project.name}"?\n\nAre you sure? This will delete all cards and data associated with this project. This action cannot be undone.`
                 );
+
                 if (confirmed) {
                     handleResult({ action: 'delete', id: projectId });
+                } else {
+                    console.log('[ProjectManagerModal] Delete cancelled.');
                 }
             });
         });
@@ -336,25 +326,20 @@ class ModalManager {
         // Create new project (prefer submit event on form, disables reload)
         const form = container.querySelector('.new-project-form');
         const input = form.querySelector('.new-project-input');
+        console.log('[ProjectManagerModal] Found new project form:', form);
         form.addEventListener('submit', function(evt) {
             evt.preventDefault();
             evt.stopPropagation();
             const name = input.value.trim();
-            log('create submit', name);
+            console.log('[ProjectManagerModal] SUBMIT: Create new project with name:', name);
             if (name) {
                 handleResult({ action: 'create', name });
             }
         });
-        // Also handle 'Enter' on the input (covered by submit above)
-
-        // Autofocus input for accessibility if user clicks into field
-        input.addEventListener('focus', () => {
-            input.select();
-        });
 
         // Add some key logging for debugging
         container.addEventListener('click', e => {
-            log('container click', e.target);
+            console.log('[ProjectManagerModal] DEBUG: Container clicked. Target:', e.target);
         });
     });
   }
