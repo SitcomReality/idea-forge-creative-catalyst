@@ -1,5 +1,5 @@
 import { generateId, formatDate } from '../utils/helpers.js';
-import { CARD_CATEGORIES } from '../utils/constants.js';
+import { CARD_CATEGORIES, CATEGORY_COLORS } from '../utils/constants.js';
 
 class CardComponent {
   constructor(cardData) {
@@ -25,6 +25,11 @@ class CardComponent {
     card.className = 'design-card';
     card.draggable = true;
     card.dataset.cardId = this.data.id;
+    card.dataset.category = this.data.category;
+    card.dataset.tags = this.data.tags.join(',');
+    
+    // Set category color
+    this.setCategoryColor(card);
 
     card.innerHTML = `
       <div class="card-header">
@@ -116,6 +121,11 @@ class CardComponent {
     });
   }
 
+  setCategoryColor(element) {
+    const color = CATEGORY_COLORS[this.data.category] || CATEGORY_COLORS.default;
+    element.style.setProperty('--card-category-color', color);
+  }
+
   update(newData) {
     this.data = { ...this.data, ...newData, updatedAt: Date.now() };
     
@@ -153,6 +163,13 @@ class CardComponent {
           .map(tag => `<span class="card-tag">${this.escapeHtml(tag)}</span>`)
           .join('');
       }
+
+      // Update dataset for filtering
+      this.element.dataset.category = this.data.category;
+      this.element.dataset.tags = this.data.tags.join(',');
+
+      // Update category color
+      this.setCategoryColor(this.element);
 
       const meta = this.element.querySelector('.card-meta small');
       if (meta) meta.textContent = formatDate(new Date(this.data.updatedAt));

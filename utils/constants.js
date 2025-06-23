@@ -21,6 +21,21 @@ export const CARD_CATEGORIES = {
   CONCEPT: 'concept' // Added missing concept category
 };
 
+export const CATEGORY_COLORS = {
+  [CARD_CATEGORIES.VISUAL]: '#ef4444',         // Red
+  [CARD_CATEGORIES.INTERACTION]: '#f97316',    // Orange
+  [CARD_CATEGORIES.CONTENT]: '#eab308',        // Yellow
+  [CARD_CATEGORIES.TECHNICAL]: '#84cc16',      // Lime
+  [CARD_CATEGORIES.AESTHETIC]: '#22c55e',      // Green
+  [CARD_CATEGORIES.FUNCTIONAL]: '#14b8a6',     // Teal
+  [CARD_CATEGORIES.USER_EXPERIENCE]: '#06b6d4', // Cyan
+  [CARD_CATEGORIES.BRANDING]: '#3b82f6',       // Blue
+  [CARD_CATEGORIES.PERFORMANCE]: '#8b5cf6',    // Violet
+  [CARD_CATEGORIES.ACCESSIBILITY]: '#d946ef',  // Fuchsia
+  [CARD_CATEGORIES.CONCEPT]: '#a855f7',        // Purple
+  default: '#64748b'                          // Slate
+};
+
 export const CARD_TYPES = {
   TEXT: 'text',
   COLOR: 'color',

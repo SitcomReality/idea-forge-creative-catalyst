@@ -4,6 +4,7 @@ import { generationManager } from '../ai/generation.js';
 import { projectManager } from './ProjectManager.js';
 import { uiManager } from './UIManager.js';
 import { generateId } from '../utils/helpers.js';
+import { filterManager } from './FilterManager.js';
 
 class CardManager {
   constructor() {
@@ -14,6 +15,10 @@ class CardManager {
   initialize() {
     // This manager is initialized after the projectManager,
     // so the initial render is handled by projectManager.loadProject -> this.renderAllCards
+  }
+
+  getAllCardsData() {
+    return projectManager.getActiveProject()?.cards || [];
   }
 
   addCard(cardData, fromUserAction = false) {
@@ -29,6 +34,9 @@ class CardManager {
     if (fromUserAction) {
         projectManager.saveActiveProjectData();
     }
+    
+    filterManager.buildFilterControls(this.getAllCardsData());
+    filterManager.applyFilters();
     return card;
   }
 
@@ -48,6 +56,7 @@ class CardManager {
         } else { // This is a new card
             this.addCard(newCardData, true);
         }
+        filterManager.buildFilterControls(this.getAllCardsData());
       }
     } catch (error) {
       console.error('Error in card dialog:', error);
@@ -70,6 +79,8 @@ class CardManager {
       if(fromUserAction) {
         projectManager.saveActiveProjectData();
       }
+      filterManager.buildFilterControls(this.getAllCardsData());
+      filterManager.applyFilters();
   }
 
   async enhanceCard(cardId) {
@@ -83,6 +94,7 @@ class CardManager {
       const enhancedData = await generationManager.enhanceCard(cardData);
       this.updateCard(cardId, enhancedData);
       projectManager.saveActiveProjectData();
+      filterManager.buildFilterControls(this.getAllCardsData());
       uiManager.showSuccessNotification('Card enhanced successfully!');
     } catch (error) {
       console.error('Error enhancing card:', error);
@@ -104,6 +116,7 @@ class CardManager {
       if (similarCards.length > 0) {
         this.addCard(similarCards[0]);
         projectManager.saveActiveProjectData();
+        filterManager.buildFilterControls(this.getAllCardsData());
         uiManager.showSuccessNotification('Similar card created!');
       }
     } catch (error) {
@@ -111,6 +124,7 @@ class CardManager {
       const duplicated = { ...cardData, id: generateId(), title: `${cardData.title} (Copy)`, createdAt: Date.now(), updatedAt: Date.now() };
       this.addCard(duplicated);
       projectManager.saveActiveProjectData();
+      filterManager.buildFilterControls(this.getAllCardsData());
       uiManager.showSuccessNotification('Card duplicated.');
     } finally {
       uiManager.setProcessingState(false);
@@ -131,6 +145,7 @@ class CardManager {
     }
     
     projectManager.saveActiveProjectData();
+    filterManager.buildFilterControls(this.getAllCardsData());
     uiManager.showSuccessNotification('Card deleted.');
   }
 
@@ -161,6 +176,7 @@ class CardManager {
     projectManager.getActiveProject().cards = [];
     this.cardsContainer.innerHTML = '';
     this.cardComponents.clear();
+    filterManager.buildFilterControls([]);
   }
 
   renderAllCards() {
@@ -174,6 +190,8 @@ class CardManager {
         this.cardComponents.set(cardData.id, card);
         this.cardsContainer.appendChild(card.render());
     });
+    filterManager.buildFilterControls(this.getAllCardsData());
+    filterManager.applyFilters();
   }
 
   setupCardEventListeners(card) {

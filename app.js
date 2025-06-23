@@ -3,6 +3,7 @@ import { uiManager } from './managers/UIManager.js';
 import { cardManager } from './managers/CardManager.js';
 import { initializeEventHandlers } from './event-handlers/mainEventHandlers.js';
 import { dragDropManager } from './components/drag-drop.js';
+import { filterManager } from './managers/FilterManager.js';
 
 class IdeaForgeApp {
   constructor() {
@@ -14,6 +15,7 @@ class IdeaForgeApp {
     uiManager.initialize();
     await projectManager.initialize(); // Project manager loads data and the initial project
     cardManager.initialize(); // Card manager needs projects to be loaded
+    filterManager.initialize();
 
     // Initialize UI components that depend on data
     this.initializeDragDrop();

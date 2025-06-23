@@ -59,11 +59,62 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
+  margin-bottom: 0;
 }
 
 .section-actions {
   display: flex;
   gap: 1rem;
+}
+
+.filter-controls {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group .filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    min-width: 80px;
+}
+
+.filter-group .filter-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    border-color: var(--border-hover);
+    background-color: var(--bg-card);
+}
+
+.filter-btn.active {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 .cards-container {
@@ -76,6 +127,7 @@
 .design-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-left: 4px solid var(--card-category-color, var(--border));
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   backdrop-filter: blur(10px);
@@ -110,8 +162,8 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.1);
+  color: var(--text-primary);
+  background-color: var(--card-category-color, var(--accent-primary));
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-sm);
 }
