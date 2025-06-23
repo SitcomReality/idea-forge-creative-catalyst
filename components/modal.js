@@ -238,78 +238,84 @@ class ModalManager {
     `;
 
     return new Promise(async (resolve) => {
-        await this.open('Project Manager', container, { autoFocus: false });
+      this.currentResolve = resolve; // This will handle closing via ESC or 'x' button
+      await this.open('Project Manager', container, { autoFocus: false });
 
-        const handleResult = (result) => {
-            this.close();
-            resolve(result);
-        };
-        
-        // This makes sure we resolve with null if the modal is closed by other means (e.g., ESC key, close button)
-        this.currentResolve = () => resolve(null);
+      const handleResult = (result) => {
+        if (!this.isOpen) return; // Prevent multiple resolutions
+        console.log('Project Manager action:', result);
+        this.close(result);
+      };
 
-        // Switch project
-        container.querySelectorAll('.project-item .project-name').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const projectId = e.currentTarget.closest('.project-item').dataset.id;
-                handleResult({ action: 'switch', id: projectId });
-            });
-        });
+      // --- Event Listeners ---
 
-        // Rename project
-        container.querySelectorAll('.rename-project').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // prevent project switch
-                const item = e.currentTarget.closest('.project-item');
-                const projectId = item.dataset.id;
-                const currentName = item.querySelector('.project-name').textContent;
-                const newName = prompt('Enter new project name:', currentName);
-                if (newName && newName.trim() !== '' && newName.trim() !== currentName) {
-                    handleResult({ action: 'rename', id: projectId, name: newName.trim() });
-                }
-            });
-        });
+      // Switch project
+      container.querySelectorAll('.project-item .project-name').forEach(item => {
+          item.addEventListener('click', (e) => {
+              const projectId = e.currentTarget.closest('.project-item').dataset.id;
+              handleResult({ action: 'switch', id: projectId });
+          });
+      });
 
-        // Delete project
-        container.querySelectorAll('.delete-project').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // prevent project switch
-                const item = e.currentTarget.closest('.project-item');
-                const projectId = item.dataset.id;
-                const project = projects.find(p => p.id === projectId);
+      // Rename project
+      container.querySelectorAll('.rename-project').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const item = e.currentTarget.closest('.project-item');
+              const projectId = item.dataset.id;
+              const currentName = item.querySelector('.project-name').textContent;
+              
+              // Use our own confirm dialog for consistency instead of prompt()
+              const newName = prompt('Enter new project name:', currentName);
+              if (newName && newName.trim() !== '' && newName.trim() !== currentName) {
+                  handleResult({ action: 'rename', id: projectId, name: newName.trim() });
+              }
+          });
+      });
 
-                if (projects.length <= 1) {
-                    alert("You cannot delete the only project.");
-                    return;
-                }
+      // Delete project
+      container.querySelectorAll('.delete-project').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const item = e.currentTarget.closest('.project-item');
+              const projectId = item.dataset.id;
+              const project = projects.find(p => p.id === projectId);
 
-                const confirmed = await this.showConfirmDialog(
-                    `Delete "${project.name}"?`,
-                    'Are you sure? This will delete all cards and data associated with this project. This action cannot be undone.',
-                    'Delete Project'
-                );
-                if (confirmed) {
-                    handleResult({ action: 'delete', id: projectId });
-                }
-            });
-        });
+              if (projects.length <= 1) {
+                  this.showErrorNotification("You cannot delete the only project.");
+                  return;
+              }
 
-        // Create new project
-        const createProject = () => {
-            const input = container.querySelector('.new-project-input');
-            const name = input.value.trim();
-            if (name) {
-                handleResult({ action: 'create', name });
-            }
-        };
+              const confirmed = await this.showConfirmDialog(
+                  `Delete "${project.name}"?`,
+                  'This will delete all cards and data associated with this project. This action cannot be undone.',
+                  'Delete Project'
+              );
 
-        container.querySelector('.new-project-submit').addEventListener('click', createProject);
-        container.querySelector('.new-project-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                createProject();
-            }
-        });
+              if (confirmed) {
+                  handleResult({ action: 'delete', id: projectId });
+              }
+          });
+      });
+      
+      // Create new project
+      const createProject = () => {
+          const input = container.querySelector('.new-project-input');
+          const name = input.value.trim();
+          if (name) {
+              handleResult({ action: 'create', name });
+          } else {
+              console.log('New project name is empty.');
+          }
+      };
+
+      container.querySelector('.new-project-submit').addEventListener('click', createProject);
+      container.querySelector('.new-project-input').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+              e.preventDefault();
+              createProject();
+          }
+      });
     });
   }
 
@@ -346,6 +352,10 @@ class ModalManager {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  showErrorNotification(message) {
+    this.open('Error', `<p>${this.escapeHtml(message)}</p>`);
   }
 }
 

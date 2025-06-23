@@ -113,6 +113,7 @@ class ProjectManager {
       uiManager.showErrorNotification("Cannot delete the only project.");
       return;
     }
+    console.log(`Deleting project: ${projectId}`);
     this.projects.delete(projectId);
     if (this.activeProjectId === projectId) {
       this.activeProjectId = this.projects.keys().next().value;
