@@ -74,6 +74,9 @@ export function initializeEventHandlers() {
     document.getElementById('new-project-btn').addEventListener('click', () => projectManager.createNewProject('Untitled Project'));
     document.getElementById('add-card').addEventListener('click', () => cardManager.createNewCardFromDialog());
     
+    // View toggler
+    document.getElementById('toggle-view-btn').addEventListener('click', () => uiManager.toggleCompactView());
+
     // Category button (placeholder action)
     document.getElementById('add-category').addEventListener('click', () => cardManager.createNewCardFromDialog());
 

@@ -167,9 +167,27 @@ class CardManager {
   }
 
   selectCard(cardId) {
+    const componentToSelect = this.cardComponents.get(cardId);
+    if (!componentToSelect) return;
+
+    if (uiManager.isCompactView) {
+        const isAlreadyExpanded = componentToSelect.element.classList.contains('expanded');
+        
+        // Collapse all cards first
+        this.cardComponents.forEach(component => {
+            component.element?.classList.remove('expanded');
+        });
+
+        // If it wasn't already expanded, expand it.
+        // Clicking an expanded card will now just collapse it.
+        if (!isAlreadyExpanded) {
+            componentToSelect.element.classList.add('expanded');
+        }
+    }
+
+    // Handle selection highlight
     this.cardComponents.forEach(component => component.element?.classList.remove('selected'));
-    const component = this.cardComponents.get(cardId);
-    if (component) component.element?.classList.add('selected');
+    componentToSelect.element?.classList.add('selected');
   }
 
   clearAllCards() {

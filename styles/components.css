@@ -228,6 +228,50 @@
   color: var(--text-muted);
 }
 
+/* Compact View Styles */
+.cards-container.compact-view {
+    gap: 1rem;
+}
+
+.cards-container.compact-view .design-card {
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.cards-container.compact-view .card-header {
+    margin-bottom: 0.5rem;
+}
+
+.cards-container.compact-view .card-title {
+    font-size: 1rem;
+}
+
+.cards-container.compact-view .card-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+    /* Truncate description to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cards-container.compact-view .card-content {
+    display: none;
+    margin-top: 1rem;
+    max-height: 250px;
+}
+
+.cards-container.compact-view .design-card.expanded .card-content {
+    display: block;
+}
+
+.cards-container.compact-view .card-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+}
+
 /* Project Manager Modal */
 .project-manager {
     display: flex;

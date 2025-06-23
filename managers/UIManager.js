@@ -1,16 +1,20 @@
 import { modalManager } from '../components/modal.js';
 import { fabManager } from '../components/fab.js';
 import { inputManager } from '../components/input.js';
+import { storage } from '../utils/storage.js';
 
 class UIManager {
     constructor() {
         this.isProcessing = false;
         this.generateBtn = document.getElementById('generate-btn');
         this.notificationContainer = null;
+        this.cardsContainer = document.getElementById('cards-container');
+        this.isCompactView = false;
     }
 
     initialize() {
         this.createNotificationContainer();
+        this.loadViewPreference();
     }
 
     createNotificationContainer() {
@@ -49,6 +53,27 @@ class UIManager {
         this.generateBtn.disabled = processing;
         this.generateBtn.innerHTML = processing ? '⏳ Generating...' : '✨ Generate';
         fabManager.setLoading(processing);
+    }
+
+    toggleCompactView() {
+        this.isCompactView = !this.isCompactView;
+        this.cardsContainer.classList.toggle('compact-view', this.isCompactView);
+        storage.saveUserPreferences({ ...storage.loadUserPreferences(), compactView: this.isCompactView });
+
+        // Collapse any expanded cards when switching views
+        if (!this.isCompactView) {
+            this.cardsContainer.querySelectorAll('.design-card.expanded').forEach(card => {
+                card.classList.remove('expanded');
+            });
+        }
+    }
+
+    loadViewPreference() {
+        const prefs = storage.loadUserPreferences();
+        if (prefs && prefs.compactView) {
+            this.isCompactView = true;
+            this.cardsContainer.classList.add('compact-view');
+        }
     }
 
     showWelcomeIfNeeded() {
@@ -102,4 +127,3 @@ class UIManager {
 }
 
 export const uiManager = new UIManager();
-
