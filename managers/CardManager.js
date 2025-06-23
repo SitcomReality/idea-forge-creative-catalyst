@@ -36,7 +36,7 @@ class CardManager {
         projectManager.saveActiveProjectData();
     }
     
-    filterManager.buildFilterControls(this.getAllCardsData());
+    filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
     filterManager.applyFilters();
     return card;
   }
@@ -57,7 +57,7 @@ class CardManager {
         } else { // This is a new card
             this.addCard(newCardData, true);
         }
-        filterManager.buildFilterControls(this.getAllCardsData());
+        filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
       }
     } catch (error) {
       console.error('Error in card dialog:', error);
@@ -80,7 +80,7 @@ class CardManager {
       if(fromUserAction) {
         projectManager.saveActiveProjectData();
       }
-      filterManager.buildFilterControls(this.getAllCardsData());
+      filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
       filterManager.applyFilters();
   }
 
@@ -95,7 +95,7 @@ class CardManager {
       const enhancedData = await generationManager.enhanceCard(cardData);
       this.updateCard(cardId, enhancedData);
       projectManager.saveActiveProjectData();
-      filterManager.buildFilterControls(this.getAllCardsData());
+      filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
       uiManager.showSuccessNotification('Card enhanced successfully!');
     } catch (error) {
       console.error('Error enhancing card:', error);
@@ -117,7 +117,7 @@ class CardManager {
       if (similarCards.length > 0) {
         this.addCard(similarCards[0]);
         projectManager.saveActiveProjectData();
-        filterManager.buildFilterControls(this.getAllCardsData());
+        filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
         uiManager.showSuccessNotification('Similar card created!');
       }
     } catch (error) {
@@ -125,7 +125,7 @@ class CardManager {
       const duplicated = { ...cardData, id: generateId(), title: `${cardData.title} (Copy)`, createdAt: Date.now(), updatedAt: Date.now() };
       this.addCard(duplicated);
       projectManager.saveActiveProjectData();
-      filterManager.buildFilterControls(this.getAllCardsData());
+      filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
       uiManager.showSuccessNotification('Card duplicated.');
     } finally {
       uiManager.setProcessingState(false);
@@ -146,7 +146,7 @@ class CardManager {
     }
     
     projectManager.saveActiveProjectData();
-    filterManager.buildFilterControls(this.getAllCardsData());
+    filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
     uiManager.showSuccessNotification('Card deleted.');
   }
 
@@ -178,6 +178,10 @@ class CardManager {
         this.selectedCardIds.add(cardId);
         componentToSelect.element?.classList.add('selected');
     }
+    
+    // Update filters with new selection state
+    filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
+    filterManager.applyFilters();
 
     // Handle compact view expansion
     if (uiManager.isCompactView) {
@@ -204,6 +208,8 @@ class CardManager {
     });
     this.selectedCardIds.clear();
     uiManager.updateSelectionState(0);
+    filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
+    filterManager.applyFilters();
   }
 
   getSelectedCardsData() {
@@ -227,7 +233,7 @@ class CardManager {
     this.cardsContainer.innerHTML = '';
     this.cardComponents.clear();
     this.clearSelection();
-    filterManager.buildFilterControls([]);
+    filterManager.buildFilterControls([], this.selectedCardIds);
   }
 
   renderAllCards() {
@@ -242,7 +248,7 @@ class CardManager {
         this.cardComponents.set(cardData.id, card);
         this.cardsContainer.appendChild(card.render());
     });
-    filterManager.buildFilterControls(this.getAllCardsData());
+    filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
     filterManager.applyFilters();
   }
 
