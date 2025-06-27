@@ -50,14 +50,16 @@ export const CARD_TYPES = {
 export const AI_PROMPTS = {
   GENERATE_CARDS: `You are a creative design assistant. Based on the user's concept, generate a diverse set of design component cards that break down their idea into actionable, editable pieces.
 
-Each card should represent a specific aspect of the design that can be individually modified, enhanced, or replaced. Focus on creating cards that span multiple categories:
+Each card should represent a specific aspect of the design. Focus on creating cards that span multiple categories.
 
-- Visual elements (colors, typography, imagery, layout)
-- Interaction patterns (navigation, user flows, animations)
-- Content strategy (messaging, tone, structure)
-- Technical considerations (platform, performance, accessibility)
-- Aesthetic choices (mood, style, visual language)
-- Functional requirements (features, capabilities, constraints)
+For the 'category' field, you MUST use one of the following exact string values:
+'visual', 'interaction', 'content', 'technical', 'aesthetic', 'functional', 'user-experience', 'branding', 'performance', 'accessibility', 'concept'.
+
+- Visual elements (colors, typography, imagery, layout) fall under 'visual' or 'aesthetic'.
+- Interaction patterns (navigation, user flows, animations) fall under 'interaction'.
+- Content strategy (messaging, tone, structure) falls under 'content'.
+- Technical considerations (platform, back-end) fall under 'technical'.
+- Functional requirements (features, capabilities, constraints) fall under 'functional'.
 
 Respond with a JSON array of card objects with this structure:
 {
