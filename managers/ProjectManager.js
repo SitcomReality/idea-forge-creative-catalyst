@@ -1,10 +1,11 @@
 import { storage } from '../utils/storage.js';
-import { generateId, downloadJson } from '../utils/helpers.js';
+import { generateId, downloadJson, slugify, capitalizeFirstLetter } from '../utils/helpers.js';
 import { modalManager } from '../components/modal.js';
 import { uiManager } from './UIManager.js';
 import { cardManager } from './CardManager.js';
 import { chatUIManager } from './ChatUIManager.js';
 import { inputManager } from '../components/input.js';
+import { CARD_CATEGORIES, CATEGORY_COLORS } from '../utils/constants.js';
 
 class ProjectManager {
   constructor() {
@@ -46,6 +47,8 @@ class ProjectManager {
       return;
     }
 
+    project.customCategories = project.customCategories || {};
+
     this.currentProjectNameEl.textContent = project.name;
     inputManager.setValue(project.concept || '');
     cardManager.renderAllCards();
@@ -68,6 +71,7 @@ class ProjectManager {
       name: name,
       concept: '',
       cards: [],
+      customCategories: {}, // { "slug": { "label": "Label", "color": "#hex" } }
       chatHistory: [],
       createdAt: Date.now(),
       updatedAt: Date.now()
@@ -120,6 +124,49 @@ class ProjectManager {
     }
     this.saveData();
     uiManager.showSuccessNotification("Project deleted.");
+  }
+
+  addCustomCategory(label, color) {
+    const key = slugify(label);
+    if (!key) return; // Don't add empty categories
+
+    const project = this.getActiveProject();
+    if (project) {
+        if (!project.customCategories) {
+            project.customCategories = {};
+        }
+        project.customCategories[key] = { label, color };
+        project.updatedAt = Date.now();
+        this.saveData(); // Save immediately
+    }
+  }
+
+  getCategoryConfig() {
+      const project = this.getActiveProject();
+      const customCategories = project?.customCategories || {};
+
+      // Default categories: keys are slug-like, values are display labels
+      const defaultLabels = Object.values(CARD_CATEGORIES).reduce((acc, catKey) => {
+          acc[catKey] = catKey.split('-').map(capitalizeFirstLetter).join(' ');
+          return acc;
+      }, {});
+      
+      const customLabels = Object.entries(customCategories).reduce((acc, [key, value]) => {
+          acc[key] = value.label;
+          return acc;
+      }, {});
+
+      const customColors = Object.entries(customCategories).reduce((acc, [key, value]) => {
+          acc[key] = value.color;
+          return acc;
+      }, {});
+
+      return {
+          // returns { key: 'Display Label', ... }
+          labels: { ...defaultLabels, ...customLabels },
+          // returns { key: '#hexcolor', ... }
+          colors: { ...CATEGORY_COLORS, ...customColors }
+      };
   }
 
   getActiveProject() {

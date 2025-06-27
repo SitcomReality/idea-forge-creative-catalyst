@@ -1,5 +1,6 @@
 import { generateId, formatDate } from '../utils/helpers.js';
 import { CARD_CATEGORIES, CATEGORY_COLORS } from '../utils/constants.js';
+import { projectManager } from '../managers/ProjectManager.js';
 
 class CardComponent {
   constructor(cardData) {
@@ -122,7 +123,8 @@ class CardComponent {
   }
 
   setCategoryColor(element) {
-    const color = CATEGORY_COLORS[this.data.category] || CATEGORY_COLORS.default;
+    const { colors } = projectManager.getCategoryConfig();
+    const color = colors[this.data.category] || CATEGORY_COLORS.default;
     element.style.setProperty('--card-category-color', color);
   }
 
@@ -205,11 +207,9 @@ class CardComponent {
     }
   }
 
-  formatCategory(category) {
-    return category
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  formatCategory(categoryKey) {
+    const { labels } = projectManager.getCategoryConfig();
+    return labels[categoryKey] || categoryKey.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   }
 
   escapeHtml(text) {

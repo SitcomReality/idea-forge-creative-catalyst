@@ -1,6 +1,7 @@
 import { chatManager } from './chat.js';
 import { AI_PROMPTS, CARD_CATEGORIES, CARD_TYPES } from '../utils/constants.js';
 import { generateId } from '../utils/helpers.js';
+import { projectManager } from './ProjectManager.js';
 
 class GenerationManager {
   constructor() {
@@ -22,10 +23,14 @@ class GenerationManager {
       ]
     };
 
+    const { labels } = projectManager.getCategoryConfig();
+    const categoryList = Object.keys(labels).map(key => `'${key}'`).join(', ');
+    const systemPrompt = AI_PROMPTS.GENERATE_CARDS.replace('{{VALID_CATEGORIES}}', categoryList);
+
     try {
       const result = await chatManager.sendMessageWithJson(
         `Generate design component cards for this concept: "${concept}"`,
-        AI_PROMPTS.GENERATE_CARDS,
+        systemPrompt,
         schema
       );
 
@@ -64,13 +69,17 @@ class GenerationManager {
       ]
     };
 
+    const { labels } = projectManager.getCategoryConfig();
+    const categoryList = Object.keys(labels).map(key => `'${key}'`).join(', ');
+
     const systemPrompt = `You are a creative design assistant. Based on the provided context of existing design components, generate ${count} *new* and *complementary* design cards.
 
 - The user has selected these cards as a foundation: ${JSON.stringify(contextCards)}.
 - The original project concept is: "${concept}".
 - DO NOT regenerate or simply modify the provided components.
 - Create new cards that expand on the existing ideas, fill in design gaps, or offer alternative approaches that are thematically consistent with the provided context.
-- The new cards should feel like they belong to the same project as the context cards.`;
+- The new cards should feel like they belong to the same project as the context cards.
+- For the 'category' field, you MUST use one of the following exact string values: ${categoryList}`;
 
     try {
         const result = await chatManager.sendMessageWithJson(
@@ -199,7 +208,8 @@ class GenerationManager {
   }
 
   validateCategory(category) {
-    const validCategories = Object.values(CARD_CATEGORIES);
+    const { labels } = projectManager.getCategoryConfig();
+    const validCategories = Object.keys(labels);
     return validCategories.includes(category) ? category : CARD_CATEGORIES.CONCEPT;
   }
 

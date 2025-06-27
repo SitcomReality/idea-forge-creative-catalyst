@@ -42,6 +42,21 @@ class CardManager {
     return card;
   }
 
+  async createNewCategoryFromDialog() {
+    try {
+        const result = await modalManager.showCategoryEditor();
+        if (result && result.label && result.color) {
+            projectManager.addCustomCategory(result.label, result.color);
+            // Refresh filters to show the new category
+            filterManager.buildFilterControls(this.getAllCardsData(), this.selectedCardIds);
+            uiManager.showSuccessNotification(`Category "${result.label}" created!`);
+        }
+    } catch (error) {
+        console.error('Error creating new category:', error);
+        uiManager.showErrorNotification('Failed to create new category.');
+    }
+  }
+
   async createNewCardFromDialog(cardData = null) {
     try {
       const result = await modalManager.showCardEditor(cardData);

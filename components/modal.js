@@ -1,3 +1,5 @@
+import { projectManager } from '../managers/ProjectManager.js';
+
 class ModalManager {
   constructor() {
     this.overlay = document.getElementById('modal-overlay');
@@ -76,7 +78,6 @@ class ModalManager {
     }, 300);
   }
 
-  // Specific modal types
   async showCardEditor(cardData = null) {
     const isEdit = !!cardData;
     const data = cardData || {
@@ -86,6 +87,11 @@ class ModalManager {
       content: '',
       tags: []
     };
+
+    const { labels } = projectManager.getCategoryConfig();
+    const categoryOptions = Object.entries(labels)
+        .map(([key, label]) => `<option value="${key}" ${data.category === key ? 'selected' : ''}>${this.escapeHtml(label)}</option>`)
+        .join('');
 
     const form = document.createElement('form');
     form.className = 'card-editor-form';
@@ -98,17 +104,7 @@ class ModalManager {
       <div class="form-group">
         <label for="card-category">Category</label>
         <select id="card-category" name="category">
-          <option value="concept" ${data.category === 'concept' ? 'selected' : ''}>Concept</option>
-          <option value="visual" ${data.category === 'visual' ? 'selected' : ''}>Visual</option>
-          <option value="interaction" ${data.category === 'interaction' ? 'selected' : ''}>Interaction</option>
-          <option value="content" ${data.category === 'content' ? 'selected' : ''}>Content</option>
-          <option value="technical" ${data.category === 'technical' ? 'selected' : ''}>Technical</option>
-          <option value="aesthetic" ${data.category === 'aesthetic' ? 'selected' : ''}>Aesthetic</option>
-          <option value="functional" ${data.category === 'functional' ? 'selected' : ''}>Functional</option>
-          <option value="user-experience" ${data.category === 'user-experience' ? 'selected' : ''}>User Experience</option>
-          <option value="branding" ${data.category === 'branding' ? 'selected' : ''}>Branding</option>
-          <option value="performance" ${data.category === 'performance' ? 'selected' : ''}>Performance</option>
-          <option value="accessibility" ${data.category === 'accessibility' ? 'selected' : ''}>Accessibility</option>
+          ${categoryOptions}
         </select>
       </div>
       
@@ -374,6 +370,60 @@ class ModalManager {
 
     // Return the promise that is controlled by the buttons.
     return confirmationPromise;
+  }
+
+  async showCategoryEditor() {
+    const form = document.createElement('form');
+    form.className = 'category-editor-form';
+    form.innerHTML = `
+        <div class="form-group">
+            <label for="category-label">Category Name</label>
+            <input type="text" id="category-label" name="label" placeholder="e.g., User Feedback" required>
+        </div>
+        <div class="form-group">
+            <label for="category-color">Category Color</label>
+            <input type="color" id="category-color" name="color" value="#8b5cf6">
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="cancel-cat-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Category</button>
+        </div>
+    `;
+
+    // No need to wrap this in another promise, the open method already returns one
+    // that resolves when the modal is closed. We attach listeners that resolve
+    // the outer promise from the calling function.
+    this.open('Create New Category', form);
+
+    return new Promise((resolve) => {
+        const cancelBtn = form.querySelector('#cancel-cat-btn');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const result = {
+                label: formData.get('label').trim(),
+                color: formData.get('color'),
+            };
+            if(result.label) {
+                this.close();
+                resolve(result);
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            this.close();
+            resolve(null);
+        });
+        
+        // Handle closure by other means (ESC, overlay click)
+        this.overlay.addEventListener('click', (e) => {
+            if (e.target === this.overlay) resolve(null);
+        }, { once: true });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') resolve(null);
+        }, { once: true });
+    });
   }
 
   escapeHtml(text) {

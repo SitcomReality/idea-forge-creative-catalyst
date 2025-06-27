@@ -1,3 +1,6 @@
+import { projectManager } from './ProjectManager.js';
+import { cardManager } from './CardManager.js';
+
 class FilterManager {
     constructor() {
         this.filterControls = document.getElementById('filter-controls');
@@ -22,6 +25,9 @@ class FilterManager {
                 } else if (group === 'selection') {
                     this.updateSelectionFilter(value);
                 }
+            } else if (e.target.matches('[data-action="add-category"]')) {
+                e.preventDefault();
+                cardManager.createNewCategoryFromDialog();
             }
         });
     }
@@ -60,18 +66,45 @@ class FilterManager {
                 </div>
             `;
         }
+        
+        const { labels } = projectManager.getCategoryConfig();
+        const allCardCategories = ['all', ...new Set(cards.map(c => c.category))];
+
+        // Create a union of all possible categories and categories currently in use.
+        // This ensures filters exist for defined categories even if no cards use them yet.
+        const categoriesToDisplay = [...new Set([...Object.keys(labels), ...allCardCategories])];
 
         // Category filters
-        if (categories.length > 2) { // Only show if more than 'all' and one other category
+        if (categoriesToDisplay.length > 1) { // Only show if more than 'all'
+             let categoryButtons = categoriesToDisplay
+                .filter(cat => cat !== 'all') // handle 'all' separately
+                .sort() // sort alphabetically
+                .map(catKey => {
+                    const label = labels[catKey] || catKey; // Fallback to key if label not found
+                    return `
+                        <button class="filter-btn ${this.activeFilters.category === catKey ? 'active' : ''}" data-group="category" data-value="${catKey}">
+                            ${label}
+                        </button>
+                    `;
+                }).join('');
+
+            // Add 'All' button at the beginning
+            categoryButtons = `
+                <button class="filter-btn ${this.activeFilters.category === 'all' ? 'active' : ''}" data-group="category" data-value="all">
+                    All
+                </button>
+            ` + categoryButtons;
+
+            // Add 'New Category' button at the end
+            categoryButtons += `
+                <button class="btn btn-ghost btn-small" data-action="add-category" title="New Category" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">+ New</button>
+            `;
+
             html += `
                 <div class="filter-group">
                     <span class="filter-label">Category:</span>
                     <div class="filter-options">
-                        ${categories.map(cat => `
-                            <button class="filter-btn ${this.activeFilters.category === cat ? 'active' : ''}" data-group="category" data-value="${cat}">
-                                ${cat.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                            </button>
-                        `).join('')}
+                        ${categoryButtons}
                     </div>
                 </div>
             `;

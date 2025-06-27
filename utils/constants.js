@@ -47,13 +47,15 @@ export const CARD_TYPES = {
   CONCEPT: 'concept'
 };
 
+export const VALID_CATEGORIES = `'visual', 'interaction', 'content', 'technical', 'aesthetic', 'functional', 'user-experience', 'branding', 'performance', 'accessibility', 'concept'`;
+
 export const AI_PROMPTS = {
   GENERATE_CARDS: `You are a creative design assistant. Based on the user's concept, generate a diverse set of design component cards that break down their idea into actionable, editable pieces.
 
 Each card should represent a specific aspect of the design. Focus on creating cards that span multiple categories.
 
 For the 'category' field, you MUST use one of the following exact string values:
-'visual', 'interaction', 'content', 'technical', 'aesthetic', 'functional', 'user-experience', 'branding', 'performance', 'accessibility', 'concept'.
+${VALID_CATEGORIES}
 
 - Visual elements (colors, typography, imagery, layout) fall under 'visual' or 'aesthetic'.
 - Interaction patterns (navigation, user flows, animations) fall under 'interaction'.
