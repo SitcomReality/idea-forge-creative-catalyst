@@ -105,9 +105,6 @@ export function initializeEventHandlers() {
     // View toggler
     document.getElementById('toggle-view-btn').addEventListener('click', () => uiManager.toggleCompactView());
 
-    // Category button (placeholder action)
-    document.getElementById('add-category').addEventListener('click', () => cardManager.createNewCardFromDialog());
-
     // Input manager events
     inputManager.on('process', (concept) => processConceptInput(concept));
 
