@@ -1,7 +1,7 @@
 import { chatManager } from './chat.js';
 import { AI_PROMPTS, CARD_CATEGORIES, CARD_TYPES } from '../utils/constants.js';
 import { generateId } from '../utils/helpers.js';
-import { projectManager } from './ProjectManager.js';
+import { projectManager } from '../managers/ProjectManager.js';
 
 class GenerationManager {
   constructor() {
